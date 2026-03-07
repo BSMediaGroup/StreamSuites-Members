@@ -74,6 +74,10 @@
     return normalized || fallback;
   }
 
+  function isValidUserCode(value) {
+    return /^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$/i.test(String(value || "").trim());
+  }
+
   function normalizeSocialLinks(value) {
     if (!value || typeof value !== "object" || Array.isArray(value)) return {};
     return Object.entries(value).reduce((acc, [key, raw]) => {
@@ -201,6 +205,7 @@
     load,
     DEFAULT_PROFILE,
     normalizeUserCode,
+    isValidUserCode,
     platformIconFor,
     toTimestamp
   };
