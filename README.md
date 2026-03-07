@@ -8,7 +8,7 @@ Dedicated Cloudflare Pages-hosted member/community hub for StreamSuites.
 
 ## Current State
 
-This repo now carries the public community hub shell, top-bar account widget/dropdown behavior, session-aware rendering, hydrated profile/member data patterns, copied notice/profile seed data, and dedicated standalone `/u/<slug>` profile routing into the members-specific surface.
+This repo now carries the public community hub shell, top-bar account widget/dropdown behavior, session-aware rendering, restored profile/member hydration parity, corrected badge resolution for hovercards, copied notice/profile seed data, and a dedicated standalone `/u/<slug>` profile route rebuilt from the original public profile body implementation.
 
 This pass intentionally does **not** add:
 
@@ -21,7 +21,8 @@ This phase specifically restores baseline parity features from the original publ
 - top bar user/account widgets
 - account dropdowns and login/signup affordances
 - public-session-aware shell behavior
-- hydrated public profile loading for `/u/<slug>`
+- public-parity badge filtering and tooltip hydration
+- hydrated public profile loading for `/u/<slug>` with original profile body elements
 - members-side account settings and auth completion routes needed for the migrated session flow
 
 ## Repo Tree

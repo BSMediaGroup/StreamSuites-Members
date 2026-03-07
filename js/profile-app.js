@@ -14,65 +14,20 @@
     return parts[0] === "u" && parts.length > 1 ? String(parts[1] || "").trim() : "";
   }
 
-  function buildMetaPill(text, iconPath) {
-    const pill = create("span", "meta-pill");
-    if (iconPath) {
-      const icon = create("img", "chip-icon");
-      icon.src = iconPath;
-      icon.alt = "";
-      pill.appendChild(icon);
-    }
-    pill.appendChild(create("span", "", text));
-    return pill;
-  }
+  function buildStandaloneShell(root) {
+    clear(root);
+    root.className = "";
 
-  function buildInfoSection(title, body) {
-    const card = create("article", "profile-card");
-    const heading = create("div", "section-heading");
-    heading.appendChild(create("h2", "", title));
-    card.append(heading, create("p", "members-profile-placeholder", body));
-    return card;
-  }
-
-  function buildSidebarCards(profile) {
-    const side = create("aside", "members-profile-section");
-
-    const snapshot = create("article", "profile-card");
-    const snapshotHeading = create("div", "section-heading");
-    snapshotHeading.appendChild(create("h2", "", "Profile Snapshot"));
-    snapshot.appendChild(snapshotHeading);
-    const stats = create("div", "members-profile-stat-grid");
-    [
-      { value: profile.platform || "StreamSuites", label: "Primary platform" },
-      { value: window.StreamSuitesMembersUi.roleLabel(profile.role), label: "Account role" },
-      { value: (profile.tier || "core").toUpperCase(), label: "Membership tier" },
-      { value: String(Object.keys(profile.socialLinks || {}).length), label: "Linked networks" }
-    ].forEach((item) => {
-      const stat = create("div", "members-profile-stat");
-      stat.append(create("strong", "", item.value), create("span", "", item.label));
-      stats.appendChild(stat);
-    });
-    snapshot.appendChild(stats);
-
-    const share = create("article", "profile-card");
-    const shareHeading = create("div", "section-heading");
-    shareHeading.appendChild(create("h2", "", "Share"));
-    share.append(
-      shareHeading,
-      window.StreamSuitesMembersUi.buildShareBox(new URL(window.location.pathname, window.location.origin).toString())
-    );
-
-    side.append(snapshot, share);
-    return side;
+    const page = create("div", "members-profile-shell members-profile-route");
+    const wrap = create("div", "members-profile-wrap members-profile-route-wrap");
+    page.appendChild(wrap);
+    root.appendChild(page);
+    return wrap;
   }
 
   function buildNotFoundState(root, rawSlug) {
     document.title = "Profile Not Found | StreamSuites Members";
-    clear(root);
-    root.className = "";
-
-    const page = create("div", "members-profile-shell");
-    const wrap = create("div", "members-profile-wrap");
+    const wrap = buildStandaloneShell(root);
     const card = create("section", "profile-card profile-card-expanded members-profile-not-found");
     card.append(
       create("span", "members-home-eyebrow", "Invalid profile route"),
@@ -98,75 +53,110 @@
     });
     card.appendChild(actions);
     wrap.appendChild(card);
-    page.appendChild(wrap);
-    root.appendChild(page);
+  }
+
+  function buildRouteHeader(profile, canEdit) {
+    const header = create("section", "page-heading page-heading-compact members-profile-route-header");
+    const back = create("a", "see-all members-profile-route-back", "Back to members");
+    back.href = "/members/";
+    header.append(
+      back,
+      create("h1", "", profile.displayName),
+      create(
+        "p",
+        "",
+        `${profile.platform || "StreamSuites"} | ${window.StreamSuitesMembersUi.roleLabel(profile.role)}${
+          canEdit ? " | Editable profile" : ""
+        }`
+      )
+    );
+    return header;
+  }
+
+  function buildPlaceholderCard() {
+    const card = create("article", "profile-card");
+    const heading = create("div", "section-heading");
+    heading.appendChild(create("h2", "", "Placeholder Record"));
+    card.append(
+      heading,
+      create(
+        "p",
+        "members-profile-placeholder",
+        "No stored member record exists for this valid slug yet, so this dedicated route is using the standalone public-profile body with placeholder data instead of failing hard."
+      )
+    );
+    return card;
   }
 
   function buildProfilePage(root, profile, canEdit, isPlaceholder) {
     document.title = `${profile.displayName} | StreamSuites Members`;
-    clear(root);
-    root.className = "";
+    const wrap = buildStandaloneShell(root);
 
-    const page = create("div", "members-profile-shell");
-    const wrap = create("div", "members-profile-wrap");
+    wrap.appendChild(buildRouteHeader(profile, canEdit));
 
-    const topbar = create("header", "members-profile-topbar");
-    const brand = create("a", "members-profile-brand");
-    brand.href = "/";
-    const logo = create("img");
-    logo.src = "/assets/logos/logo.png";
-    logo.alt = "StreamSuites";
-    const brandCopy = create("span", "members-profile-brand-copy");
-    brandCopy.append(create("strong", "", "StreamSuites Members"), create("span", "", "Standalone profile route"));
-    brand.append(logo, brandCopy);
+    const stack = create("div", "members-profile-route-stack");
+    const profileCard = create("article", "profile-card profile-card-expanded");
 
-    const nav = create("nav", "members-profile-nav");
-    [
-      ["/", "Hub"],
-      ["/members/", "Directory"],
-      ["/notices/", "Notices"],
-      ["/settings/", "Settings"]
-    ].forEach(([href, label]) => {
-      const link = create("a", "members-profile-link", label);
-      link.href = href;
-      nav.appendChild(link);
-    });
-    topbar.append(brand, nav);
-
-    const hero = create("section", "profile-card profile-card-expanded members-profile-hero");
-    const cover = create("div", "members-profile-cover");
+    const coverWrap = create("div", "profile-cover");
     const coverImage = create("img");
     coverImage.src = profile.coverImageUrl || "/assets/placeholders/defaultprofilecover.webp";
     coverImage.alt = `${profile.displayName} cover`;
-    cover.appendChild(coverImage);
-    hero.appendChild(cover);
+    coverWrap.appendChild(coverImage);
+    profileCard.appendChild(coverWrap);
 
-    const heroBody = create("div", "members-profile-hero-body");
-    const summary = create("div", "members-profile-summary");
-    const avatar = window.StreamSuitesMembersUi.buildAvatar(profile, "members-profile-avatar");
-    const summaryCopy = create("div", "members-profile-summary-copy");
-    summaryCopy.appendChild(create("div", "members-profile-kicker", canEdit ? "Editable member profile" : isPlaceholder ? "Profile placeholder" : "Member profile"));
+    profileCard.appendChild(window.StreamSuitesMembersUi.buildCreatorMeta(profile, { expanded: true, includeRoleChip: true }));
 
-    const titleRow = create("div", "members-profile-title-row");
-    titleRow.append(create("h1", "", profile.displayName), create("span", "members-profile-handle", `@${profile.userCode}`));
-    summaryCopy.appendChild(titleRow);
+    const socialHeader = create("div", "profile-inline-header");
+    socialHeader.append(create("h3", "", "Social Links"));
+    if (canEdit) {
+      const editSocial = create("a", "edit-affordance", "Edit");
+      editSocial.href = "/settings/";
+      socialHeader.appendChild(editSocial);
+    }
+    profileCard.append(socialHeader, window.StreamSuitesMembersUi.buildSocialLinksRow(profile.socialLinks));
 
-    const meta = create("div", "members-profile-meta");
-    meta.append(
-      buildMetaPill(profile.platform, profile.platformIcon),
-      buildMetaPill(window.StreamSuitesMembersUi.roleLabel(profile.role)),
-      buildMetaPill((profile.tier || "core").toUpperCase())
-    );
-    summaryCopy.appendChild(meta);
+    const bioHeader = create("div", "profile-inline-header");
+    bioHeader.append(create("h3", "", "Bio"));
+    const bioBody = create("p", "profile-bio-text", profile.bio || "No bio provided yet.");
+    profileCard.append(bioHeader, bioBody);
 
-    const bioText = profile.bio || "No bio provided yet.";
-    const bio = create("p", "members-profile-placeholder", bioText);
-    summaryCopy.appendChild(bio);
+    const shareHeader = create("div", "profile-inline-header");
+    shareHeader.appendChild(create("h3", "", "Profile Share Link"));
+    profileCard.append(shareHeader, window.StreamSuitesMembersUi.buildShareBox(new URL(window.location.pathname, window.location.origin).toString()));
 
-    const actions = create("div", "members-profile-actions");
+    if (canEdit) {
+      const privacyWrap = create("label", "profile-visibility-toggle");
+      const toggle = create("input");
+      toggle.type = "checkbox";
+      toggle.checked = profile.isAnonymous === true;
+      const text = create("span", "", "Anonymous / Private profile");
+      const status = create("span", "muted");
+      privacyWrap.append(toggle, text, status);
+      profileCard.appendChild(privacyWrap);
+
+      toggle.addEventListener("change", async () => {
+        status.textContent = "Saving...";
+        toggle.disabled = true;
+        try {
+          const updated = await window.StreamSuitesMembersSession.saveMyPublicProfile({ anonymous: toggle.checked });
+          profile.isAnonymous = updated?.is_anonymous === true || updated?.anonymous === true;
+          toggle.checked = profile.isAnonymous;
+          status.textContent = profile.isAnonymous ? "Anonymous enabled" : "Public profile enabled";
+        } catch (error) {
+          toggle.checked = !toggle.checked;
+          status.textContent = error instanceof Error ? error.message : "Save failed";
+        } finally {
+          toggle.disabled = false;
+        }
+      });
+    }
+
+    stack.appendChild(profileCard);
+
+    const actions = create("div", "members-profile-actions members-profile-route-actions");
     [
-      ["/members/", "Back to directory"],
-      ["/", "Open hub"]
+      ["/", "Open hub"],
+      ["/members/", "Browse members"]
     ].forEach(([href, label]) => {
       const link = create("a", "members-profile-link", label);
       link.href = href;
@@ -177,42 +167,13 @@
       settings.href = "/settings/";
       actions.appendChild(settings);
     }
-    summaryCopy.appendChild(actions);
-
-    summary.append(avatar, summaryCopy);
-    heroBody.appendChild(summary);
-    hero.appendChild(heroBody);
-
-    const grid = create("div", "members-profile-grid");
-    const main = create("section", "members-profile-section");
-    main.append(
-      buildInfoSection(
-        "Profile Overview",
-        canEdit
-          ? "This standalone /u/<slug> page is using the same public profile hydration pattern as the original hub, with your authenticated profile data layered over the local fallback record."
-          : "This standalone /u/<slug> page keeps the dedicated members route while using the original hub's hydrated public profile pattern where available."
-      )
-    );
-
-    const socialCard = create("article", "profile-card");
-    const socialHeading = create("div", "section-heading");
-    socialHeading.appendChild(create("h2", "", "Linked Platforms"));
-    socialCard.append(socialHeading, window.StreamSuitesMembersUi.buildSocialLinksRow(profile.socialLinks));
-    main.appendChild(socialCard);
+    stack.appendChild(actions);
 
     if (isPlaceholder) {
-      main.appendChild(
-        buildInfoSection(
-          "Placeholder Record",
-          "No stored member record exists for this valid slug yet, so the route is rendering a polished placeholder frame instead of failing hard."
-        )
-      );
+      stack.appendChild(buildPlaceholderCard());
     }
 
-    grid.append(main, buildSidebarCards(profile));
-    wrap.append(topbar, hero, grid);
-    page.appendChild(wrap);
-    root.appendChild(page);
+    wrap.appendChild(stack);
   }
 
   async function init() {

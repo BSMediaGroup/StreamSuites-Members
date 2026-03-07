@@ -182,6 +182,43 @@ body.members-profile-page a {
   gap: 24px;
 }
 
+.members-profile-route-wrap {
+  width: min(100%, 920px);
+}
+
+.members-profile-route-header {
+  gap: 10px;
+}
+
+.members-profile-route-back {
+  width: fit-content;
+}
+
+.members-profile-route-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.members-profile-route .profile-card.profile-card-expanded {
+  overflow: hidden;
+}
+
+.members-profile-route .creator-meta.is-expanded {
+  padding-inline: 24px;
+}
+
+.members-profile-route .profile-inline-header,
+.members-profile-route .profile-social-row,
+.members-profile-route .profile-bio-text,
+.members-profile-route .share-box,
+.members-profile-route .profile-visibility-toggle {
+  margin-inline: 24px;
+}
+
+.members-profile-route-actions {
+  padding-inline: 4px;
+}
+
 .members-profile-topbar {
   display: flex;
   align-items: center;

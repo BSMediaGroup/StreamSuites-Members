@@ -153,35 +153,47 @@
   function applyProfileHoverAttrs(node, profile) {
     if (!node || !profile || typeof profile !== "object") return;
     node.classList.add("ss-profile-hover");
-    setHoverDataAttr(node, "data-ss-profile-href", buildProfileHref(profile));
-    setHoverDataAttr(node, "data-ss-user-code", profile.userCode || profile.username || profile.id);
-    setHoverDataAttr(node, "data-ss-user-id", profile.id || profile.userCode || profile.username);
-    setHoverDataAttr(node, "data-ss-display-name", profile.displayName || profile.username || "Public User");
-    setHoverDataAttr(node, "data-ss-avatar-url", profile.avatar || "");
-    setHoverDataAttr(node, "data-ss-role", roleLabel(normalizeRoleForUi(profile.role)));
-    setHoverDataAttr(node, "data-ss-bio", profile.bio || "");
-    setHoverDataAttr(node, "data-ss-cover-url", profile.coverImageUrl || "");
-    setHoverJsonAttr(node, "data-ss-social-links", profile.socialLinks || {});
-    setHoverJsonAttr(node, "data-ss-badges", Array.isArray(profile.badges) ? profile.badges : []);
+
+    const profileHref = buildProfileHref(profile);
+    const userCode = String(profile.userCode || profile.username || profile.id || "").trim();
+    const userId = String(profile.id || profile.userCode || profile.username || "").trim();
+    const displayName = String(profile.displayName || profile.username || "Public User").trim();
+    const avatarUrl = String(profile.avatar || "").trim();
+    const role = roleLabel(normalizeRoleForUi(profile.role));
+    const bio = String(profile.bio || "").trim();
+    const coverUrl = String(profile.coverImageUrl || profile.cover_image_url || "").trim();
+    const socialLinks = window.StreamSuitesMembersData.normalizeSocialLinks(profile.socialLinks || profile.social_links);
+    const badges = Array.isArray(profile.badges) ? profile.badges : [];
+
+    setHoverDataAttr(node, "data-ss-user-code", userCode);
+    setHoverDataAttr(node, "data-ss-user-id", userId);
+    setHoverDataAttr(node, "data-ss-display-name", displayName);
+    setHoverDataAttr(node, "data-ss-avatar-url", avatarUrl);
+    setHoverDataAttr(node, "data-ss-role", role);
+    setHoverDataAttr(node, "data-ss-bio", bio);
+    setHoverDataAttr(node, "data-ss-cover-url", coverUrl);
+    setHoverDataAttr(node, "data-ss-profile-href", profileHref);
+    setHoverJsonAttr(node, "data-ss-social-links", socialLinks);
+    setHoverJsonAttr(node, "data-ss-badges", badges);
   }
 
   function buildCreatorMeta(profile, options = {}) {
     const expanded = Boolean(options.expanded);
     const includeRoleChip = Boolean(options.includeRoleChip);
     const row = create("div", "creator-meta");
-    if (expanded) row.classList.add("is-expanded");
     applyProfileHoverAttrs(row, profile);
+    if (expanded) row.classList.add("is-expanded");
 
     const avatar = buildAvatar(profile);
+    applyProfileHoverAttrs(avatar, profile);
     if (expanded) avatar.classList.add("is-expanded");
     row.appendChild(avatar);
 
     const textWrap = create("div", "creator-meta-text");
     const top = create("div", "creator-meta-top");
-    top.append(
-      create("span", "creator-name", profile?.displayName || "Public User"),
-      buildBadgeSuffix(profile, { includeRoleChip })
-    );
+    const name = create("span", "creator-name", profile?.displayName || "Public User");
+    applyProfileHoverAttrs(name, profile);
+    top.append(name, buildBadgeSuffix(profile, { includeRoleChip }));
     const bottom = create("div", "creator-meta-bottom", profile?.platform || "StreamSuites");
     textWrap.append(top, bottom);
     row.appendChild(textWrap);
@@ -244,8 +256,14 @@
     button.appendChild(createIcon(UI_ICON_MAP.copy));
     button.addEventListener("click", () => {
       copyTextToClipboard(url).then((copied) => {
+        button.classList.toggle("is-copied", copied);
         button.innerHTML = "";
         button.appendChild(createIcon(copied ? UI_ICON_MAP.check : UI_ICON_MAP.copy));
+        window.setTimeout(() => {
+          button.classList.remove("is-copied");
+          button.innerHTML = "";
+          button.appendChild(createIcon(UI_ICON_MAP.copy));
+        }, 1300);
       });
     });
     box.append(text, button);
@@ -254,7 +272,7 @@
 
   function buildSocialLinksRow(socialLinks) {
     const row = create("div", "profile-social-row");
-    const entries = Object.entries(socialLinks || {});
+    const entries = Object.entries(window.StreamSuitesMembersData.normalizeSocialLinks(socialLinks));
     if (!entries.length) {
       row.appendChild(create("span", "muted", "No social links set."));
       return row;

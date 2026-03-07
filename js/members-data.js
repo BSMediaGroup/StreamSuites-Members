@@ -142,14 +142,24 @@
     return PLATFORM_ICON_MAP[key] || PLATFORM_ICON_MAP.generic;
   }
 
+  function roleLabel(role) {
+    if (role === "admin") return "ADMIN";
+    if (role === "creator") return "CREATOR";
+    return "VIEWER";
+  }
+
   function buildBadges(role, tier) {
-    if (role === "admin") {
-      return [{ kind: "role-icon", value: "admin", label: "ADMIN" }];
+    const normalizedRole = role === "admin" ? "admin" : role === "creator" ? "creator" : "viewer";
+    const tierValue = normalizeTier(tier);
+    const badges = [{ kind: "role-chip", value: normalizedRole, label: roleLabel(normalizedRole) }];
+    if (normalizedRole === "admin") {
+      badges.unshift({ kind: "role-icon", value: "admin" });
+      return badges;
     }
-    if (role === "creator") {
-      return [{ kind: "tier-icon", value: normalizeTier(tier), label: String(tier || "core").toUpperCase() }];
+    if (normalizedRole === "creator") {
+      badges.unshift({ kind: "tier-icon", value: tierValue });
     }
-    return [];
+    return badges;
   }
 
   function normalizeProfile(raw) {
@@ -209,13 +219,20 @@
   function resolveProfile(state, value) {
     const normalized = normalizeUserCode(value, "");
     if (!normalized) return state.profilesById[DEFAULT_PROFILE.id] || DEFAULT_PROFILE;
-    return (
+    const direct =
       state.profilesByCode[normalized] ||
       state.profilesById[normalized] ||
-      state.profilesByLookup[normalized] ||
-      state.profilesById[DEFAULT_PROFILE.id] ||
-      DEFAULT_PROFILE
-    );
+      state.profilesByLookup[normalized];
+    if (direct) return direct;
+
+    const aliasMatch = (state.profiles || []).find((profile) => {
+      const displayName = String(profile?.displayName || "").trim();
+      const firstName = displayName.split(/\s+/)[0] || "";
+      const aliases = [profile?.userCode, profile?.username, profile?.id, displayName, firstName];
+      return aliases.some((entry) => normalizeUserCode(entry || "", "") === normalized);
+    });
+
+    return aliasMatch || state.profilesById[DEFAULT_PROFILE.id] || DEFAULT_PROFILE;
   }
 
   function normalizeNotice(raw, profileState, index) {
@@ -231,31 +248,43 @@
   }
 
   function normalizeProfilePayload(payload, fallbackProfile, fallbackCode) {
-    const role = normalizeRole(payload?.role || payload?.account_type || payload?.accountType || fallbackProfile?.role);
-    const tier = normalizeTier(payload?.tier || fallbackProfile?.tier);
+    const accountType =
+      normalizeAccountType(payload?.account_type || payload?.accountType) ||
+      (String(payload?.role || "").toLowerCase().includes("admin")
+        ? "ADMIN"
+        : String(payload?.role || "").toLowerCase().includes("creator")
+          ? "CREATOR"
+          : "PUBLIC");
+    const role = accountType === "ADMIN" ? "admin" : accountType === "CREATOR" ? "creator" : "viewer";
+    const tier = normalizeTier(payload?.tier || fallbackProfile?.tier || "core");
     const userCode = normalizeUserCode(
       payload?.user_code || payload?.userCode || fallbackProfile?.userCode || fallbackCode || "public-user"
     );
-    const profile = {
-      id: String(payload?.id || fallbackProfile?.id || userCode).trim() || userCode,
+    return {
+      id: fallbackProfile?.id || userCode,
       userCode,
-      username: String(payload?.username || fallbackProfile?.username || userCode).trim() || userCode,
-      displayName: String(payload?.display_name || payload?.displayName || fallbackProfile?.displayName || userCode).trim() || userCode,
-      avatar: String(payload?.avatar || payload?.avatar_url || payload?.avatarUrl || fallbackProfile?.avatar || FALLBACK_AVATAR).trim() || FALLBACK_AVATAR,
-      platform: String(payload?.platform || fallbackProfile?.platform || "StreamSuites").trim() || "StreamSuites",
-      platformKey: normalizePlatformKey(payload?.platform || fallbackProfile?.platform || "StreamSuites"),
-      platformIcon: platformIconFor(payload?.platform || fallbackProfile?.platform || "StreamSuites"),
+      username: fallbackProfile?.username || userCode,
+      displayName:
+        String(payload?.display_name || payload?.displayName || fallbackProfile?.displayName || "Public User").trim() ||
+        "Public User",
+      avatar:
+        String(payload?.avatar_url || payload?.avatarUrl || fallbackProfile?.avatar || FALLBACK_AVATAR).trim() ||
+        FALLBACK_AVATAR,
+      platform: fallbackProfile?.platform || "StreamSuites",
+      platformKey: fallbackProfile?.platformKey || "streamsuites",
+      platformIcon: fallbackProfile?.platformIcon || PLATFORM_ICON_MAP.streamsuites,
       role,
-      accountType: normalizeAccountType(payload?.account_type || payload?.accountType, role),
+      accountType,
       tier,
       badges: buildBadges(role, tier),
       bio: String(payload?.bio || fallbackProfile?.bio || "").trim(),
-      coverImageUrl: String(payload?.cover_image_url || payload?.coverImageUrl || fallbackProfile?.coverImageUrl || FALLBACK_COVER).trim() || FALLBACK_COVER,
+      coverImageUrl:
+        String(payload?.cover_image_url || payload?.coverImageUrl || fallbackProfile?.coverImageUrl || FALLBACK_COVER).trim() ||
+        FALLBACK_COVER,
       socialLinks: normalizeSocialLinks(payload?.social_links || payload?.socialLinks || fallbackProfile?.socialLinks),
       isAnonymous: payload?.is_anonymous === true || payload?.anonymous === true || fallbackProfile?.isAnonymous === true,
       isListed: payload?.is_listed !== false && payload?.listed !== false && fallbackProfile?.isListed !== false
     };
-    return profile;
   }
 
   async function load() {
