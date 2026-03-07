@@ -1,2 +1,6 @@
 /u /u/index.html 200
 /u/* /u/index.html 200
+/members /members/index.html 200
+/notices /notices/index.html 200
+/settings /settings/index.html 200
+/auth-complete /auth-complete/index.html 200

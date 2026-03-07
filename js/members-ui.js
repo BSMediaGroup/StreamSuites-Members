@@ -17,7 +17,9 @@
     twitter: "/assets/icons/twitter.svg",
     twitch: "/assets/icons/twitch.svg",
     kick: "/assets/icons/kick.svg",
-    website: "/assets/icons/ui/globe.svg"
+    github: "/assets/icons/github.svg",
+    website: "/assets/icons/ui/globe.svg",
+    tiktok: "/assets/icons/ui/widget.svg"
   });
 
   const UI_ICON_MAP = Object.freeze({
@@ -91,17 +93,20 @@
       icon.src = TIER_ICON_MAP[normalized] || TIER_ICON_MAP.core;
       icon.alt = `${normalized || "core"} tier`;
       icon.classList.add("badge-icon-tier", "ss-tier-badge");
+      icon.setAttribute("data-ss-badge-kind", "tier");
       return icon;
     }
     icon.src = ROLE_ICON_MAP[normalized] || ROLE_ICON_MAP.admin;
     icon.alt = `${normalized || "viewer"} role`;
     icon.classList.add("badge-icon-role", "ss-role-badge");
+    icon.setAttribute("data-ss-badge-kind", "role");
     return icon;
   }
 
   function buildBadgeSuffix(profile, options = {}) {
     const includeRoleChip = Boolean(options.includeRoleChip);
     const row = create("span", "creator-badges ss-role-badges");
+    row.setAttribute("data-ss-role-badge", "");
     const role = normalizeRoleForUi(profile?.role);
     const tier = normalizeTierForUi(profile?.tier);
     if (role === "admin") {
@@ -116,11 +121,56 @@
     return row;
   }
 
+  function setHoverDataAttr(node, name, value) {
+    if (!node || !name) return;
+    const text = String(value || "").trim();
+    if (text) {
+      node.setAttribute(name, text);
+      return;
+    }
+    node.removeAttribute(name);
+  }
+
+  function setHoverJsonAttr(node, name, value) {
+    if (!node || !name) return;
+    if (value == null) {
+      node.removeAttribute(name);
+      return;
+    }
+    let text = "";
+    try {
+      text = JSON.stringify(value);
+    } catch (_err) {
+      text = "";
+    }
+    if (text && text !== "{}" && text !== "[]") {
+      node.setAttribute(name, text);
+      return;
+    }
+    node.removeAttribute(name);
+  }
+
+  function applyProfileHoverAttrs(node, profile) {
+    if (!node || !profile || typeof profile !== "object") return;
+    node.classList.add("ss-profile-hover");
+    setHoverDataAttr(node, "data-ss-profile-href", buildProfileHref(profile));
+    setHoverDataAttr(node, "data-ss-user-code", profile.userCode || profile.username || profile.id);
+    setHoverDataAttr(node, "data-ss-user-id", profile.id || profile.userCode || profile.username);
+    setHoverDataAttr(node, "data-ss-display-name", profile.displayName || profile.username || "Public User");
+    setHoverDataAttr(node, "data-ss-avatar-url", profile.avatar || "");
+    setHoverDataAttr(node, "data-ss-role", roleLabel(normalizeRoleForUi(profile.role)));
+    setHoverDataAttr(node, "data-ss-bio", profile.bio || "");
+    setHoverDataAttr(node, "data-ss-cover-url", profile.coverImageUrl || "");
+    setHoverJsonAttr(node, "data-ss-social-links", profile.socialLinks || {});
+    setHoverJsonAttr(node, "data-ss-badges", Array.isArray(profile.badges) ? profile.badges : []);
+  }
+
   function buildCreatorMeta(profile, options = {}) {
     const expanded = Boolean(options.expanded);
     const includeRoleChip = Boolean(options.includeRoleChip);
     const row = create("div", "creator-meta");
     if (expanded) row.classList.add("is-expanded");
+    applyProfileHoverAttrs(row, profile);
 
     const avatar = buildAvatar(profile);
     if (expanded) avatar.classList.add("is-expanded");
@@ -138,15 +188,19 @@
     return row;
   }
 
-  function buildProfileCard(profile) {
+  function buildProfileCard(profile, options = {}) {
     const card = create("article", "profile-card");
+    applyProfileHoverAttrs(card, profile);
     card.appendChild(buildCreatorMeta(profile, { expanded: true, includeRoleChip: false }));
-    card.appendChild(create("p", "item-snippet", profile.bio || "Member profile foundation ported from the public community hub."));
+    card.appendChild(create("p", "item-snippet", profile.bio || "Community member profile synchronized from the public hub."));
+
     const meta = create("div", "item-meta");
     meta.appendChild(create("span", "meta-pill", roleLabel(normalizeRoleForUi(profile.role))));
     if (profile.tier) meta.appendChild(create("span", "meta-pill", String(profile.tier).toUpperCase()));
+    if (options.submeta) meta.appendChild(create("span", "meta-pill", options.submeta));
     card.appendChild(meta);
-    const link = create("a", "see-all", "Open profile");
+
+    const link = create("a", "see-all", options.linkLabel || "Open profile");
     link.href = buildProfileHref(profile);
     card.appendChild(link);
     return card;
@@ -202,7 +256,7 @@
     const row = create("div", "profile-social-row");
     const entries = Object.entries(socialLinks || {});
     if (!entries.length) {
-      row.appendChild(create("span", "muted", "No social links available yet."));
+      row.appendChild(create("span", "muted", "No social links set."));
       return row;
     }
     entries.forEach(([network, url]) => {
@@ -224,9 +278,9 @@
 
   function filterProfiles(profiles, query) {
     const needle = String(query || "").trim().toLowerCase();
-    if (!needle) return profiles.filter((profile) => profile?.isListed !== false);
     return profiles.filter((profile) => {
       if (profile?.isListed === false) return false;
+      if (!needle) return true;
       const haystack = [
         profile.displayName,
         profile.username,
@@ -240,8 +294,8 @@
 
   function filterNotices(notices, query) {
     const needle = String(query || "").trim().toLowerCase();
-    if (!needle) return notices;
     return notices.filter((notice) => {
+      if (!needle) return true;
       const haystack = [
         notice.title,
         notice.body,
@@ -257,6 +311,7 @@
     clear,
     createIcon,
     normalizeRoleForUi,
+    normalizeTierForUi,
     roleLabel,
     buildProfileHref,
     buildAvatar,
@@ -266,6 +321,7 @@
     buildSection,
     buildShareBox,
     buildSocialLinksRow,
+    applyProfileHoverAttrs,
     filterProfiles,
     filterNotices
   };

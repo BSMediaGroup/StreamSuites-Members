@@ -2,15 +2,28 @@
   const PAGE_CONFIG = {
     home: {
       title: "Community",
-      searchPlaceholder: "Search members and notices"
+      searchPlaceholder: "Search members and notices",
+      activeHref: "/",
+      render: renderHome
     },
     members: {
       title: "Members",
-      searchPlaceholder: "Search members"
+      searchPlaceholder: "Search members",
+      activeHref: "/members/",
+      render: renderMembers
     },
     notices: {
       title: "Notices",
-      searchPlaceholder: "Search notices"
+      searchPlaceholder: "Search notices",
+      activeHref: "/notices/",
+      render: renderNotices
+    },
+    settings: {
+      title: "Account Settings",
+      searchPlaceholder: "Search",
+      activeHref: "/settings/",
+      showSearch: false,
+      render: renderSettings
     }
   };
 
@@ -22,172 +35,99 @@
     return window.StreamSuitesMembersUi.clear(node);
   }
 
-  function buildNoticeCard(notice, data, compact = false) {
+  function buildNoticeCard(notice, compact = false) {
     const card = create("article", `notice-card${compact ? " members-compact-card" : ""}`);
     const priority = create("span", `meta-pill members-priority-pill priority-${notice.priority}`, notice.priority);
     const meta = create(
       "div",
       "notice-meta",
-      `${data.helpers.toTimestamp(notice.createdAt)} | ${notice.author.displayName}`
+      `${window.StreamSuitesMembersData.toTimestamp(notice.createdAt)} | ${notice.author.displayName}`
     );
+    window.StreamSuitesMembersUi.applyProfileHoverAttrs(card, notice.author);
     card.append(priority, create("h3", "", notice.title), create("p", "", notice.body), meta);
     return card;
   }
 
-  function buildHubHero(data) {
-    const hero = create("section", "members-home-hero");
-    const copy = create("div", "members-home-hero-copy");
-    const eyebrow = create("span", "members-home-eyebrow", "Members Surface");
-    const title = create("h1", "", "Community hub foundation migrated into the dedicated members shell.");
-    const text = create(
-      "p",
-      "",
-      "This first pass ports the public discovery shell, directory framing, and notice surface into members.streamsuites.app while keeping deeper account and live integrations deferred."
-    );
-    copy.append(eyebrow, title, text);
-
-    const stats = create("div", "members-home-stat-grid");
-    [
-      { value: String(data.profiles.filter((profile) => profile?.isListed !== false).length), label: "Listed profiles" },
-      { value: String(data.notices.length), label: "Published notices" },
-      { value: "Static", label: "Data mode" }
-    ].forEach((item) => {
-      const card = create("article", "members-home-stat-card");
-      card.append(create("strong", "", item.value), create("span", "", item.label));
-      stats.appendChild(card);
-    });
-
-    const actions = create("div", "members-home-actions");
-    [
-      ["/members/", "Browse members"],
-      ["/notices/", "Read notices"],
-      ["/u/testuser", "Open sample profile"]
-    ].forEach(([href, label]) => {
-      const link = create("a", "members-home-action", label);
-      link.href = href;
-      actions.appendChild(link);
-    });
-
-    hero.append(copy, stats, actions);
-    return hero;
-  }
-
-  function buildHubOverview(data) {
-    const wrap = create("section", "members-overview-grid");
-    [
-      {
-        title: "Discovery Shell",
-        body: "Sidebar navigation, search framing, cards, and panel styling now inherit the public community language instead of a blank placeholder."
-      },
-      {
-        title: "Standalone Profiles",
-        body: "Deep links under /u/<slug> stay outside the sidebar shell and render as full-page member profiles with dedicated framing."
-      },
-      {
-        title: "Port Scope",
-        body: `This pass carries ${data.notices.length} notice entries and ${data.profiles.length} profile records without adding live API or provider fetches yet.`
-      }
-    ].forEach((item) => {
-      const card = create("article", "profile-card members-overview-card");
-      card.append(create("h3", "", item.title), create("p", "members-shell-note", item.body));
-      wrap.appendChild(card);
-    });
-    return wrap;
-  }
-
-  function renderHome(host, data, query) {
+  function renderHome(ctx) {
+    const { host, data, state, authState } = ctx;
     clear(host);
-    host.appendChild(buildHubHero(data));
     host.appendChild(
       window.StreamSuitesMembersUi.buildPageHeading(
-        "Community",
-        "Latest notices and member discovery carried over from the existing public hub."
+        authState?.authenticated ? `Community, ${authState.displayName}` : "Community",
+        "Latest notices and public member directory behavior migrated from the original community hub."
       )
     );
-    host.appendChild(buildHubOverview(data));
 
-    const latestNoticeSection = window.StreamSuitesMembersUi.buildSection("Latest Notice", "/notices/");
-    const latestNotice = window.StreamSuitesMembersUi.filterNotices(data.notices, query)[0];
+    const latestNotice = window.StreamSuitesMembersUi.filterNotices(data.notices, state.query)[0] || null;
+    const noticeSection = window.StreamSuitesMembersUi.buildSection("Latest Notice", "/notices/");
     if (latestNotice) {
-      latestNoticeSection.appendChild(buildNoticeCard(latestNotice, data));
+      noticeSection.appendChild(buildNoticeCard(latestNotice));
     } else {
-      latestNoticeSection.appendChild(create("div", "empty-state", "No notices match this search."));
+      noticeSection.appendChild(create("div", "empty-state", "No notices published yet."));
     }
-    host.appendChild(latestNoticeSection);
+    host.appendChild(noticeSection);
 
-    const membersSection = window.StreamSuitesMembersUi.buildSection("Featured Members", "/members/");
+    const memberSection = window.StreamSuitesMembersUi.buildSection("Members", "/members/");
+    const members = window.StreamSuitesMembersUi.filterProfiles(data.profiles, state.query)
+      .slice(0, window.matchMedia("(max-width: 900px)").matches ? 4 : 8);
     const grid = create("div", "profile-grid");
-    window.StreamSuitesMembersUi.filterProfiles(data.profiles, query)
-      .slice(0, window.matchMedia("(max-width: 900px)").matches ? 4 : 8)
-      .forEach((profile) => grid.appendChild(window.StreamSuitesMembersUi.buildProfileCard(profile)));
-    if (grid.childElementCount) {
-      membersSection.appendChild(grid);
-    } else {
-      membersSection.appendChild(create("div", "empty-state", "No members match this search."));
+    members.forEach((profile) => {
+      grid.appendChild(window.StreamSuitesMembersUi.buildProfileCard(profile));
+    });
+    memberSection.appendChild(grid);
+    if (!members.length) {
+      memberSection.appendChild(create("div", "empty-state", "No members match this search."));
     }
-    host.appendChild(membersSection);
+    host.appendChild(memberSection);
 
-    const noticePreviewSection = window.StreamSuitesMembersUi.buildSection("Recent Notice Feed", "/notices/");
+    const updates = window.StreamSuitesMembersUi.buildSection("Recent Notice Feed", "/notices/");
     const feed = create("div", "members-overview-grid");
-    window.StreamSuitesMembersUi.filterNotices(data.notices, query)
+    window.StreamSuitesMembersUi.filterNotices(data.notices, state.query)
       .slice(0, 3)
-      .forEach((notice) => feed.appendChild(buildNoticeCard(notice, data, true)));
+      .forEach((notice) => feed.appendChild(buildNoticeCard(notice, true)));
     if (feed.childElementCount) {
-      noticePreviewSection.appendChild(feed);
+      updates.appendChild(feed);
     } else {
-      noticePreviewSection.appendChild(create("div", "empty-state", "No notice previews match this search."));
+      updates.appendChild(create("div", "empty-state", "No notices match this search."));
     }
-    host.appendChild(noticePreviewSection);
+    host.appendChild(updates);
   }
 
-  function renderMembers(host, data, query) {
+  function renderMembers(ctx) {
+    const { host, data, state } = ctx;
     clear(host);
     host.appendChild(
       window.StreamSuitesMembersUi.buildPageHeading(
         "Members Directory",
-        "Search all currently ported public community profiles inside the dedicated members repo."
+        "Search all currently migrated community profiles inside the dedicated members surface."
       )
     );
 
-    const intro = create("section", "members-overview-grid");
-    [
-      {
-        title: "Dedicated Routing",
-        body: "Cards link to /u/<slug> so creator profiles resolve as standalone pages instead of inside the hub sidebar shell."
-      },
-      {
-        title: "Static Placeholder Data",
-        body: "Profile cards currently use copied local JSON from the public hub while API and live status wiring remain intentionally disabled."
-      }
-    ].forEach((item) => {
-      const card = create("article", "profile-card members-overview-card");
-      card.append(create("h3", "", item.title), create("p", "members-shell-note", item.body));
-      intro.appendChild(card);
-    });
-    host.appendChild(intro);
-
     const grid = create("section", "profile-grid");
-    window.StreamSuitesMembersUi.filterProfiles(data.profiles, query)
-      .forEach((profile) => grid.appendChild(window.StreamSuitesMembersUi.buildProfileCard(profile)));
+    const members = window.StreamSuitesMembersUi.filterProfiles(data.profiles, state.query);
+    members.forEach((profile) => {
+      grid.appendChild(window.StreamSuitesMembersUi.buildProfileCard(profile));
+    });
     host.appendChild(grid);
 
-    if (!grid.childElementCount) {
+    if (!members.length) {
       host.appendChild(create("div", "empty-state", "No members match this search."));
     }
   }
 
-  function renderNotices(host, data, query) {
+  function renderNotices(ctx) {
+    const { host, data, state } = ctx;
     clear(host);
     host.appendChild(
       window.StreamSuitesMembersUi.buildPageHeading(
         "Community Notices",
-        "Published updates copied from the public hub to keep the members surface grounded in real existing content."
+        "All published notices and updates carried from the public community baseline."
       )
     );
 
-    const notices = window.StreamSuitesMembersUi.filterNotices(data.notices, query);
+    const notices = window.StreamSuitesMembersUi.filterNotices(data.notices, state.query);
     const section = create("section", "section members-notice-stack");
-    notices.forEach((notice) => section.appendChild(buildNoticeCard(notice, data)));
+    notices.forEach((notice) => section.appendChild(buildNoticeCard(notice)));
     host.appendChild(section);
 
     if (!notices.length) {
@@ -195,37 +135,207 @@
     }
   }
 
-  async function init() {
+  function buildSettingsField(labelText, inputNode, helpText = "") {
+    const label = create("label", "settings-field");
+    label.appendChild(create("span", "settings-label", labelText));
+    label.appendChild(inputNode);
+    if (helpText) label.appendChild(create("span", "settings-help", helpText));
+    return label;
+  }
+
+  function renderSettings(ctx) {
+    const { host, authState } = ctx;
+    clear(host);
+    host.appendChild(
+      window.StreamSuitesMembersUi.buildPageHeading(
+        "Account Settings",
+        "Manage visibility, bio, cover image, and social links for the public-facing members profile."
+      )
+    );
+
+    if (!authState?.authenticated) {
+      host.appendChild(create("div", "empty-state", "Log in to access Account Settings."));
+      return;
+    }
+
+    const panel = create("section", "profile-card settings-form");
+    const status = create("div", "muted");
+    const form = create("form", "settings-grid");
+    form.addEventListener("submit", (event) => event.preventDefault());
+
+    const visibilityToggle = create("input");
+    visibilityToggle.type = "checkbox";
+    visibilityToggle.name = "anonymous";
+    form.appendChild(buildSettingsField("Profile visibility", visibilityToggle, "Enable anonymous profile mode."));
+
+    const listingToggle = create("input");
+    listingToggle.type = "checkbox";
+    listingToggle.name = "listed";
+    listingToggle.checked = true;
+    form.appendChild(buildSettingsField("Community directory listing", listingToggle, "Show this profile in the members directory."));
+
+    const coverInput = create("input");
+    coverInput.type = "url";
+    coverInput.name = "cover_image_url";
+    coverInput.placeholder = "/assets/placeholders/defaultprofilecover.webp";
+    form.appendChild(buildSettingsField("Cover image URL", coverInput));
+
+    const bioInput = create("textarea");
+    bioInput.name = "bio";
+    bioInput.rows = 5;
+    form.appendChild(buildSettingsField("Bio", bioInput));
+
+    const socialField = create("div", "settings-field");
+    socialField.appendChild(create("span", "settings-label", "Social links"));
+    const socialInputs = {};
+    ["youtube", "rumble", "discord", "x", "twitch", "kick", "github", "website"].forEach((key) => {
+      const row = create("label", "settings-social-row");
+      const label = create("span", "", key.toUpperCase());
+      const input = create("input");
+      input.type = "url";
+      input.placeholder = `${key} URL`;
+      socialInputs[key] = input;
+      row.append(label, input);
+      socialField.appendChild(row);
+    });
+    form.appendChild(socialField);
+
+    const saveButton = create("button", "filter-chip active settings-save-btn", "Save settings");
+    saveButton.type = "button";
+    saveButton.addEventListener("click", async () => {
+      status.textContent = "Saving...";
+      saveButton.disabled = true;
+      try {
+        const socialPayload = Object.entries(socialInputs).reduce((acc, [key, input]) => {
+          const value = String(input.value || "").trim();
+          if (!value) return acc;
+          acc[key] = value;
+          return acc;
+        }, {});
+
+        const updated = await window.StreamSuitesMembersSession.saveMyPublicProfile({
+          anonymous: visibilityToggle.checked,
+          listed: listingToggle.checked,
+          cover_image_url: String(coverInput.value || "").trim(),
+          bio: String(bioInput.value || "").trim(),
+          social_links: socialPayload
+        });
+
+        const normalizedSocial = window.StreamSuitesMembersData.normalizeSocialLinks(
+          updated?.social_links || updated?.socialLinks
+        );
+        visibilityToggle.checked = updated?.is_anonymous === true || updated?.anonymous === true;
+        listingToggle.checked = updated?.is_listed !== false && updated?.listed !== false;
+        coverInput.value = String(updated?.cover_image_url || updated?.coverImageUrl || "").trim();
+        bioInput.value = String(updated?.bio || "").trim();
+        Object.entries(socialInputs).forEach(([key, input]) => {
+          input.value = normalizedSocial[key] || "";
+        });
+        status.textContent = "Saved";
+      } catch (error) {
+        status.textContent = error instanceof Error ? error.message : "Save failed";
+      } finally {
+        saveButton.disabled = false;
+      }
+    });
+
+    form.appendChild(saveButton);
+    panel.append(form, status);
+    host.appendChild(panel);
+
+    (async () => {
+      try {
+        const profile = await window.StreamSuitesMembersSession.fetchMyPublicProfile();
+        const social = window.StreamSuitesMembersData.normalizeSocialLinks(profile?.social_links || profile?.socialLinks);
+        visibilityToggle.checked = profile?.is_anonymous === true || profile?.anonymous === true;
+        listingToggle.checked = profile?.is_listed !== false && profile?.listed !== false;
+        coverInput.value = String(profile?.cover_image_url || profile?.coverImageUrl || "").trim();
+        bioInput.value = String(profile?.bio || "").trim();
+        Object.entries(socialInputs).forEach(([key, input]) => {
+          input.value = social[key] || "";
+        });
+      } catch (_error) {
+        status.textContent = "Unable to load settings from Auth API.";
+      }
+    })();
+  }
+
+  function init() {
     const pageId = document.body?.dataset?.membersPage || "home";
     const config = PAGE_CONFIG[pageId] || PAGE_CONFIG.home;
     const state = { query: "" };
+    let data = null;
+    let authState = window.StreamSuitesMembersSession.normalizeAuthState(null);
 
     const shell = window.StreamSuitesMembersShell.mount({
       title: config.title,
       searchPlaceholder: config.searchPlaceholder,
-      activeHref: window.location.pathname,
+      activeHref: config.activeHref,
+      showSearch: config.showSearch,
+      accountLabel: "Login",
       onSearch(nextQuery) {
         state.query = nextQuery;
         render();
-      }
+      },
+      onAccountMenuAction: handleAccountMenuAction
     });
 
-    shell.content.appendChild(create("div", "empty-state", "Loading members hub…"));
-    const data = await window.StreamSuitesMembersData.load();
-
     function render() {
-      if (pageId === "members") {
-        renderMembers(shell.content, data, state.query);
-        return;
-      }
-      if (pageId === "notices") {
-        renderNotices(shell.content, data, state.query);
-        return;
-      }
-      renderHome(shell.content, data, state.query);
+      if (!data) return;
+      config.render({ host: shell.content, data, state, authState, shell });
     }
 
-    render();
+    function applyAuth() {
+      window.StreamSuitesMembersSession.applyAuthStateToShell(shell, authState, handleAccountMenuAction);
+    }
+
+    async function refreshAuthWidget(force = false) {
+      try {
+        authState = await window.StreamSuitesMembersSession.fetchAuthState();
+      } catch (_error) {
+        if (force) {
+          authState = window.StreamSuitesMembersSession.normalizeAuthState(null);
+        }
+      } finally {
+        applyAuth();
+        render();
+      }
+    }
+
+    async function handleAccountMenuAction(action) {
+      if (action === "public_login") {
+        shell.openAuthModal("login");
+        return;
+      }
+      if (action === "public_signup") {
+        shell.openAuthModal("signup");
+        return;
+      }
+      if (action !== "logout") return;
+
+      try {
+        await window.StreamSuitesMembersSession.logout();
+      } catch (_error) {
+        // Refresh local auth state regardless of logout response.
+      }
+      await refreshAuthWidget(true);
+    }
+
+    window.addEventListener("message", (event) => {
+      if (!event?.data || event.data.type !== window.StreamSuitesMembersSession.AUTH_COMPLETE_MESSAGE_TYPE) return;
+      if (event.origin !== window.location.origin && event.origin !== "https://members.streamsuites.app") return;
+      refreshAuthWidget(true);
+    });
+
+    shell.content.appendChild(create("div", "empty-state", "Loading members hub..."));
+
+    Promise.all([
+      window.StreamSuitesMembersData.load(),
+      refreshAuthWidget(false)
+    ]).then(([loadedData]) => {
+      data = loadedData;
+      render();
+    });
   }
 
   window.addEventListener("DOMContentLoaded", init, { once: true });
