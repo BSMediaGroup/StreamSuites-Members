@@ -47,6 +47,10 @@
       .replace(/^-+|-+$/g, "");
   }
 
+  function buildAppUrl(path) {
+    return new URL(String(path || "/"), window.location.origin);
+  }
+
   function getRouteSlug() {
     const segments = String(window.location.pathname || "/").split("/").filter(Boolean);
     if (segments.length !== 1) return "";
@@ -118,7 +122,7 @@
   }
 
   async function fetchJson(path) {
-    const response = await fetch(path, { cache: "no-store" });
+    const response = await fetch(buildAppUrl(path), { cache: "no-store" });
     if (!response.ok) throw new Error(`Request failed (${response.status})`);
     return response.json();
   }
@@ -129,7 +133,7 @@
   }
 
   async function fetchPublicProfile(slug) {
-    const endpoint = new URL(PUBLIC_PROFILE_ENDPOINT);
+    const endpoint = buildAppUrl(PUBLIC_PROFILE_ENDPOINT);
     endpoint.searchParams.set("slug", slug);
     const response = await fetch(endpoint.toString(), {
       method: "GET",
@@ -146,12 +150,18 @@
     return {
       slug: normalizeSlug(item?.public_slug || item?.slug),
       public_slug: normalizeSlug(item?.public_slug || item?.slug),
+      slug_aliases: Array.isArray(item?.slug_aliases) ? item.slug_aliases.map((value) => normalizeSlug(value)).filter(Boolean) : [],
       user_code: String(item?.user_code || "").trim(),
       display_name: String(item?.display_name || item?.public_slug || "").trim(),
       avatar_url: String(item?.avatar_url || "").trim(),
       role: String(item?.role || "").trim(),
       account_type: String(item?.account_type || "").trim(),
-      tier: String(item?.tier || "").trim()
+      tier: String(item?.tier || "").trim(),
+      account_status: String(item?.account_status || item?.status || "").trim().toLowerCase(),
+      streamsuites_profile_url: String(item?.streamsuites_profile_url || "").trim(),
+      findmehere_enabled: item?.findmehere_enabled === false ? false : true,
+      findmehere_eligible: item?.findmehere_eligible === false ? false : Boolean(normalizeSlug(item?.public_slug || item?.slug)),
+      findmehere_share_url: String(item?.findmehere_share_url || "").trim()
     };
   }
 
@@ -182,10 +192,11 @@
       social_links: normalizeSocialLinks(profile?.social_links),
       is_listed: explicitListed === false ? false : profile?.listed === false ? false : profile?.community_listed === false ? false : true,
       is_anonymous: profile?.is_anonymous === true,
-      streamsuites_profile_url: String(profile?.streamsuites_profile_url || "").trim(),
+      account_status: String(profile?.account_status || profile?.status || fallback?.account_status || "").trim().toLowerCase(),
+      streamsuites_profile_url: String(profile?.streamsuites_profile_url || fallback?.streamsuites_profile_url || "").trim(),
       findmehere_enabled: explicitEnabled === false ? false : true,
       findmehere_eligible: explicitEligible === false ? false : explicitEligible === true ? true : hasCanonicalSlug,
-      findmehere_share_url: String(profile?.findmehere_share_url || (hasCanonicalSlug ? `${window.location.origin}/${slug}` : "")).trim(),
+      findmehere_share_url: String(profile?.findmehere_share_url || fallback?.findmehere_share_url || (hasCanonicalSlug ? `${window.location.origin}/${slug}` : "")).trim(),
       can_edit: profile?.can_edit === true
     };
   }
@@ -194,6 +205,7 @@
     return Boolean(
       profile &&
       profile.slug &&
+      (!profile.account_status || profile.account_status === "active") &&
       profile.findmehere_eligible === true &&
       profile.findmehere_enabled !== false &&
       profile.is_listed !== false
@@ -553,12 +565,11 @@
 
   async function loadDirectoryProfiles() {
     const seed = (await fetchDirectorySeed()).map(normalizeSeedProfile).filter((item) => item.slug);
-    const hydrated = await Promise.allSettled(seed.map(async (item) => normalizePublicProfile(await fetchPublicProfile(item.slug), item)));
     const bySlug = new Map();
-    hydrated.forEach((result) => {
-      if (result.status !== "fulfilled") return;
-      if (!result.value.slug || bySlug.has(result.value.slug)) return;
-      bySlug.set(result.value.slug, result.value);
+    seed.forEach((item) => {
+      const normalized = normalizePublicProfile(item, item);
+      if (!normalized.slug || bySlug.has(normalized.slug)) return;
+      bySlug.set(normalized.slug, normalized);
     });
     return [...bySlug.values()];
   }

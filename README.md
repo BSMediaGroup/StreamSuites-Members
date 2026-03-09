@@ -14,8 +14,8 @@ This repository now serves as the dedicated FindMeHere public surface instead of
 - `/<slug>` is the canonical public FindMeHere profile route
 - Cloudflare Pages deep links are handled through a single-entry fallback in [`_redirects`](C:\NEPTUNE LOCAL\GIT\StreamSuites-Members\_redirects)
 - authoritative public profile hydration now runs through the same-origin Pages proxy at [`functions/api/public/profile.js`](C:\NEPTUNE LOCAL\GIT\StreamSuites-Members\functions\api\public\profile.js) to avoid browser CORS failures against the StreamSuites API
-- directory hydration starts from the local authoritative slug seed in [`data/findmehere-directory.json`](C:\NEPTUNE LOCAL\GIT\StreamSuites-Members\data\findmehere-directory.json)
-- eligibility and per-profile rendering are verified against the authoritative StreamSuites public profile shape at runtime
+- directory hydration now starts from the local snapshot of the authoritative StreamSuites export in [`data/findmehere-directory.json`](C:\NEPTUNE LOCAL\GIT\StreamSuites-Members\data\findmehere-directory.json)
+- directory eligibility uses canonical exported slug plus FindMeHere surface fields, while per-profile rendering is still verified against the authoritative StreamSuites public profile payload at runtime
 - signup, login, and profile-management calls-to-action route back toward StreamSuites
 
 ## Notes
