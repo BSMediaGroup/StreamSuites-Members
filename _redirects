@@ -1,6 +1,9 @@
-/u /u/index.html 200
-/u/* /u/index.html 200
-/members /members/index.html 200
-/notices /notices/index.html 200
-/settings /settings/index.html 200
-/auth-complete /auth-complete/index.html 200
+/u/:slug /:slug 301
+/members / 301
+/members/* / 301
+/notices / 301
+/notices/* / 301
+/settings https://streamsuites.app 302
+/settings/* https://streamsuites.app 302
+/auth-complete / 302
+/* /index.html 200

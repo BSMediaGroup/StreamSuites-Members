@@ -1,0 +1,584 @@
+(() => {
+  const DIRECTORY_SEED_PATH = "/data/findmehere-directory.json";
+  const PUBLIC_PROFILE_ENDPOINT = "https://api.streamsuites.app/api/public/profile";
+  const STREAMSUITES_HOME = "https://streamsuites.app";
+  const FALLBACK_COVER = "/assets/placeholders/defaultprofilecover.webp";
+  const RESERVED_SEGMENTS = new Set([
+    "",
+    "assets",
+    "auth-complete",
+    "css",
+    "data",
+    "favicon.ico",
+    "js",
+    "members",
+    "notices",
+    "settings",
+    "u"
+  ]);
+
+  function create(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (typeof text === "string") node.textContent = text;
+    return node;
+  }
+
+  function clear(node) {
+    while (node.firstChild) node.removeChild(node.firstChild);
+  }
+
+  function setMeta(title, description) {
+    document.title = title;
+    let descriptionTag = document.querySelector('meta[name="description"]');
+    if (!descriptionTag) {
+      descriptionTag = document.createElement("meta");
+      descriptionTag.name = "description";
+      document.head.appendChild(descriptionTag);
+    }
+    descriptionTag.content = description;
+  }
+
+  function normalizeSlug(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+
+  function getRouteSlug() {
+    const segments = String(window.location.pathname || "/").split("/").filter(Boolean);
+    if (segments.length !== 1) return "";
+    const slug = normalizeSlug(segments[0]);
+    if (!slug || RESERVED_SEGMENTS.has(slug) || slug.includes(".")) return "";
+    return slug;
+  }
+
+  function getInitials(name) {
+    const parts = String(name || "").trim().split(/\s+/).filter(Boolean).slice(0, 2);
+    if (!parts.length) return "FM";
+    return parts.map((part) => part.charAt(0).toUpperCase()).join("");
+  }
+
+  function buildAvatar(profile, large = false) {
+    const wrap = create("div", large ? "fmh-profile-avatar" : "fmh-avatar");
+    const url = String(profile?.avatar_url || "").trim();
+    if (url) {
+      const image = create("img");
+      image.src = url;
+      image.alt = `${profile.display_name || profile.slug || "Profile"} avatar`;
+      wrap.appendChild(image);
+      return wrap;
+    }
+    wrap.textContent = getInitials(profile?.display_name || profile?.slug);
+    return wrap;
+  }
+
+  function normalizeSocialLinks(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return [];
+    return Object.entries(value)
+      .map(([network, url]) => ({
+        network: String(network || "").trim().toLowerCase(),
+        url: String(url || "").trim()
+      }))
+      .filter((item) => item.network && item.url);
+  }
+
+  function toTitle(value) {
+    return String(value || "")
+      .trim()
+      .replace(/[_-]+/g, " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+  }
+
+  function roleLabel(value) {
+    const role = String(value || "").trim().toLowerCase();
+    if (role.includes("admin")) return "Admin";
+    if (role.includes("creator")) return "Creator";
+    return "Public";
+  }
+
+  function tierLabel(value) {
+    const tier = String(value || "").trim().toLowerCase();
+    return tier ? tier.toUpperCase() : "";
+  }
+
+  function copyText(value, button) {
+    const text = String(value || "").trim();
+    if (!text || !navigator.clipboard?.writeText) return;
+    navigator.clipboard.writeText(text).then(() => {
+      button.classList.add("is-copied");
+      button.textContent = "Copied";
+      window.setTimeout(() => {
+        button.classList.remove("is-copied");
+        button.textContent = "Copy";
+      }, 1200);
+    });
+  }
+
+  async function fetchJson(path) {
+    const response = await fetch(path, { cache: "no-store" });
+    if (!response.ok) throw new Error(`Request failed (${response.status})`);
+    return response.json();
+  }
+
+  async function fetchDirectorySeed() {
+    const payload = await fetchJson(DIRECTORY_SEED_PATH);
+    return Array.isArray(payload?.items) ? payload.items : [];
+  }
+
+  async function fetchPublicProfile(slug) {
+    const endpoint = new URL(PUBLIC_PROFILE_ENDPOINT);
+    endpoint.searchParams.set("slug", slug);
+    const response = await fetch(endpoint.toString(), {
+      method: "GET",
+      cache: "no-store",
+      credentials: "include",
+      headers: { Accept: "application/json" }
+    });
+    if (!response.ok) throw new Error(`Profile request failed (${response.status})`);
+    const payload = await response.json();
+    return payload?.profile && typeof payload.profile === "object" ? payload.profile : payload;
+  }
+
+  function normalizeSeedProfile(item) {
+    return {
+      slug: normalizeSlug(item?.public_slug || item?.slug),
+      public_slug: normalizeSlug(item?.public_slug || item?.slug),
+      user_code: String(item?.user_code || "").trim(),
+      display_name: String(item?.display_name || item?.public_slug || "").trim(),
+      avatar_url: String(item?.avatar_url || "").trim(),
+      role: String(item?.role || "").trim(),
+      account_type: String(item?.account_type || "").trim(),
+      tier: String(item?.tier || "").trim()
+    };
+  }
+
+  function normalizePublicProfile(profile, fallback = null) {
+    const slug = normalizeSlug(profile?.public_slug || profile?.slug || fallback?.slug);
+    return {
+      slug,
+      public_slug: slug,
+      slug_aliases: Array.isArray(profile?.slug_aliases) ? profile.slug_aliases.map((item) => normalizeSlug(item)).filter(Boolean) : [],
+      user_code: String(profile?.user_code || fallback?.user_code || "").trim(),
+      display_name: String(profile?.display_name || fallback?.display_name || slug).trim() || slug,
+      avatar_url: String(profile?.avatar_url || fallback?.avatar_url || "").trim(),
+      tier: String(profile?.tier || fallback?.tier || "").trim(),
+      role: String(profile?.role || fallback?.role || "").trim(),
+      account_type: String(profile?.account_type || fallback?.account_type || "").trim(),
+      bio: String(profile?.bio || "").trim(),
+      cover_image_url: String(profile?.cover_image_url || "").trim() || FALLBACK_COVER,
+      social_links: normalizeSocialLinks(profile?.social_links),
+      is_listed: profile?.is_listed !== false,
+      is_anonymous: profile?.is_anonymous === true,
+      streamsuites_profile_url: String(profile?.streamsuites_profile_url || "").trim(),
+      findmehere_enabled: profile?.findmehere_enabled !== false,
+      findmehere_eligible: profile?.findmehere_eligible === true,
+      findmehere_share_url: String(profile?.findmehere_share_url || "").trim(),
+      can_edit: profile?.can_edit === true
+    };
+  }
+
+  function isEligibleProfile(profile) {
+    return Boolean(
+      profile &&
+      profile.slug &&
+      profile.findmehere_eligible === true &&
+      profile.findmehere_enabled !== false &&
+      profile.is_listed !== false
+    );
+  }
+
+  function matchesAlphabet(profile, letter) {
+    if (!letter || letter === "all") return true;
+    return String(profile?.display_name || profile?.slug || "").trim().toUpperCase().startsWith(letter);
+  }
+
+  function matchesQuery(profile, query) {
+    const needle = String(query || "").trim().toLowerCase();
+    if (!needle) return true;
+    const haystack = [
+      profile.display_name,
+      profile.slug,
+      profile.bio,
+      profile.role,
+      profile.account_type,
+      profile.tier,
+      ...profile.social_links.map((item) => `${item.network} ${item.url}`)
+    ].join(" ").toLowerCase();
+    return haystack.includes(needle);
+  }
+
+  function sortProfiles(profiles) {
+    return [...profiles].sort((left, right) => {
+      const nameCompare = String(left.display_name || left.slug).localeCompare(String(right.display_name || right.slug));
+      if (nameCompare !== 0) return nameCompare;
+      return String(left.slug).localeCompare(String(right.slug));
+    });
+  }
+
+  function buildTopbar() {
+    const bar = create("header", "fmh-topbar");
+
+    const brand = create("a", "fmh-brand");
+    brand.href = "/";
+    brand.append(
+      create("div", "fmh-brand-mark", "FMH"),
+      (() => {
+        const copy = create("div", "fmh-brand-copy");
+        copy.append(create("strong", "", "FindMeHere"), create("span", "", "Standalone share pages"));
+        return copy;
+      })()
+    );
+
+    const actions = create("div", "fmh-topbar-actions");
+    const streamSuites = create("a", "fmh-link-button", "Open StreamSuites");
+    streamSuites.href = STREAMSUITES_HOME;
+    streamSuites.target = "_blank";
+    streamSuites.rel = "noopener noreferrer";
+
+    const creatorLogin = create("a", "fmh-button fmh-button-primary", "Creator Sign In");
+    creatorLogin.href = `${STREAMSUITES_HOME}/public-login.html`;
+    creatorLogin.target = "_blank";
+    creatorLogin.rel = "noopener noreferrer";
+    actions.append(streamSuites, creatorLogin);
+
+    bar.append(brand, actions);
+    return bar;
+  }
+
+  function buildHero(eligibleCount) {
+    const hero = create("section", "fmh-hero");
+
+    const left = create("div", "fmh-panel fmh-hero-copy");
+    left.append(
+      create("span", "fmh-hero-kicker", "findmehere.live"),
+      create("h1", "", "Share-first profiles for the StreamSuites network."),
+      create("p", "", "FindMeHere is the lightweight discovery surface for public share pages. Creator identity stays authoritative in StreamSuites, while this surface stays focused on clean directory browsing and direct profile links.")
+    );
+    const actions = create("div", "fmh-hero-actions");
+    const browse = create("a", "fmh-button fmh-button-primary", "Browse directory");
+    browse.href = "#directory";
+    const setup = create("a", "fmh-link-button", "Set up your profile in StreamSuites");
+    setup.href = STREAMSUITES_HOME;
+    setup.target = "_blank";
+    setup.rel = "noopener noreferrer";
+    actions.append(browse, setup);
+    left.appendChild(actions);
+
+    const right = create("div", "fmh-panel");
+    const stats = create("div", "fmh-stat-grid");
+    [
+      { value: String(eligibleCount), label: "Eligible FindMeHere profiles" },
+      { value: "A-Z", label: "Quick alphabet filtering" },
+      { value: "2 views", label: "Gallery and list layouts" },
+      { value: "Share first", label: "FindMeHere URL only" }
+    ].forEach((item) => {
+      const card = create("div", "fmh-stat-card");
+      card.append(create("strong", "", item.value), create("span", "", item.label));
+      stats.appendChild(card);
+    });
+    right.appendChild(stats);
+
+    hero.append(left, right);
+    return hero;
+  }
+
+  function buildSearch(query, onInput) {
+    const wrap = create("div", "fmh-search-wrap");
+    const shell = create("label", "fmh-search-shell");
+    shell.append(create("span", "fmh-chip", "Search"));
+    const input = create("input");
+    input.type = "search";
+    input.placeholder = "Search names, slugs, bio, or platform";
+    input.value = query;
+    input.addEventListener("input", () => onInput(input.value));
+    shell.appendChild(input);
+    wrap.appendChild(shell);
+    return wrap;
+  }
+
+  function buildDirectoryCard(profile) {
+    const card = create("article", "fmh-directory-card");
+    const head = create("div", "fmh-card-head");
+    const copy = create("div", "fmh-name-block");
+    const line = create("div", "fmh-name-line");
+    line.append(create("strong", "", profile.display_name), create("span", "fmh-handle", `@${profile.slug}`));
+    copy.append(line, create("p", "", profile.bio || "FindMeHere share page"));
+    head.append(buildAvatar(profile), copy);
+
+    const meta = create("div", "fmh-card-meta");
+    [roleLabel(profile.role), tierLabel(profile.tier), profile.social_links[0]?.network ? toTitle(profile.social_links[0].network) : ""]
+      .filter(Boolean)
+      .forEach((item) => meta.appendChild(create("span", "", item)));
+
+    const link = create("a", "fmh-button fmh-button-primary", "Open profile");
+    link.href = `/${encodeURIComponent(profile.slug)}`;
+    card.append(head, meta, link);
+    return card;
+  }
+
+  function buildDirectoryRow(profile) {
+    const row = create("article", "fmh-directory-row");
+    const head = create("div", "fmh-row-head");
+    const copy = create("div", "fmh-row-copy");
+    copy.append(create("strong", "", profile.display_name), create("p", "", profile.bio || `Share page for @${profile.slug}`));
+    head.append(buildAvatar(profile), copy);
+
+    const meta = create("div", "fmh-row-meta");
+    [create("span", "", `@${profile.slug}`), create("span", "", roleLabel(profile.role))]
+      .forEach((item) => meta.appendChild(item));
+    if (profile.tier) meta.appendChild(create("span", "", tierLabel(profile.tier)));
+
+    const link = create("a", "fmh-link-button", "View");
+    link.href = `/${encodeURIComponent(profile.slug)}`;
+    row.append(head, meta, link);
+    return row;
+  }
+
+  function buildUnavailableState(reason, slug) {
+    setMeta("Profile unavailable | FindMeHere", "This FindMeHere route is unavailable because the profile is not listed or cannot be shown on FindMeHere.");
+
+    const shell = create("div", "fmh-shell");
+    shell.appendChild(buildTopbar());
+
+    const route = create("section", "fmh-profile-route");
+    const card = create("div", "fmh-panel fmh-unavailable-card");
+    card.append(
+      create("span", "fmh-profile-kicker", "Unavailable"),
+      create("h1", "", "This profile is not currently listed on FindMeHere."),
+      create("p", "", reason || (slug ? `The route /${slug} resolved, but the profile is disabled, not listed, or otherwise unavailable for FindMeHere.` : "The requested profile could not be shown on FindMeHere."))
+    );
+
+    const actions = create("div", "fmh-unavailable-actions");
+    const home = create("a", "fmh-button fmh-button-primary", "Back to directory");
+    home.href = "/";
+    const streamSuites = create("a", "fmh-link-button", "Open StreamSuites");
+    streamSuites.href = STREAMSUITES_HOME;
+    streamSuites.target = "_blank";
+    streamSuites.rel = "noopener noreferrer";
+    actions.append(home, streamSuites);
+    card.appendChild(actions);
+    route.appendChild(card);
+    shell.appendChild(route);
+    return shell;
+  }
+
+  function renderDirectory(root, state) {
+    const eligibleProfiles = sortProfiles(state.profiles.filter(isEligibleProfile));
+    const filtered = eligibleProfiles.filter((profile) => matchesAlphabet(profile, state.letter) && matchesQuery(profile, state.query));
+
+    setMeta("FindMeHere | Share-first creator directory", "Browse eligible FindMeHere profiles and open standalone share pages backed by the authoritative StreamSuites profile surface.");
+
+    const shell = create("div", "fmh-shell");
+    shell.appendChild(buildTopbar());
+    shell.appendChild(buildHero(eligibleProfiles.length));
+    shell.appendChild(buildSearch(state.query, (nextQuery) => {
+      state.query = nextQuery;
+      renderDirectory(root, state);
+    }));
+
+    const section = create("section", "");
+    section.id = "directory";
+
+    const toolbar = create("div", "fmh-directory-toolbar");
+    const title = create("div", "fmh-section-title");
+    title.append(create("span", "", "Directory"), create("h2", "", "Eligible FindMeHere profiles"));
+    const summary = create("p", "");
+    summary.innerHTML = `<span class="fmh-result-summary"><strong>${filtered.length}</strong> of ${eligibleProfiles.length} visible</span>`;
+    title.appendChild(summary);
+    toolbar.appendChild(title);
+
+    const controls = create("div", "fmh-directory-controls");
+    const actions = create("div", "fmh-directory-actions");
+    const viewToggle = create("div", "fmh-view-toggle");
+    [["gallery", "Gallery"], ["list", "List"]].forEach(([value, label]) => {
+      const button = create("button", state.view === value ? "is-active" : "", label);
+      button.type = "button";
+      button.addEventListener("click", () => {
+        state.view = value;
+        renderDirectory(root, state);
+      });
+      viewToggle.appendChild(button);
+    });
+
+    const alpha = create("div", "fmh-alpha");
+    [["all", "All"], ...Array.from({ length: 26 }, (_, index) => {
+      const letter = String.fromCharCode(65 + index);
+      return [letter, letter];
+    })].forEach(([value, label]) => {
+      const button = create("button", state.letter === value ? "is-active" : "", label);
+      button.type = "button";
+      button.addEventListener("click", () => {
+        state.letter = value;
+        renderDirectory(root, state);
+      });
+      alpha.appendChild(button);
+    });
+
+    actions.append(viewToggle, alpha);
+    controls.appendChild(actions);
+    toolbar.appendChild(controls);
+    section.appendChild(toolbar);
+
+    if (!filtered.length) {
+      const empty = create("div", "fmh-empty");
+      empty.append(create("h2", "", "No profiles match that filter."), create("p", "", "Try a different name search or switch back to the All alphabet filter."));
+      section.appendChild(empty);
+    } else {
+      const results = create("div", "fmh-results");
+      results.dataset.view = state.view;
+      filtered.forEach((profile) => results.appendChild(state.view === "list" ? buildDirectoryRow(profile) : buildDirectoryCard(profile)));
+      section.appendChild(results);
+    }
+
+    shell.appendChild(section);
+    clear(root);
+    root.appendChild(shell);
+  }
+
+  function buildLinkItem(item) {
+    const link = create("a", "fmh-social-item");
+    const href = /^https?:\/\//i.test(item.url) ? item.url : `https://${item.url.replace(/^\/+/, "")}`;
+    link.href = href;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.append(create("strong", "", toTitle(item.network)), create("p", "", href));
+    return link;
+  }
+
+  function renderProfile(root, profile, requestedSlug) {
+    if (!isEligibleProfile(profile)) {
+      clear(root);
+      root.appendChild(buildUnavailableState(`/${requestedSlug} loaded, but this account is not eligible for public FindMeHere listing.`, requestedSlug));
+      return;
+    }
+
+    if (profile.slug && requestedSlug && profile.slug !== requestedSlug) {
+      window.history.replaceState({}, "", `/${encodeURIComponent(profile.slug)}`);
+    }
+
+    setMeta(`${profile.display_name} | FindMeHere`, profile.bio || `Open ${profile.display_name}'s FindMeHere share page on findmehere.live.`);
+
+    const shell = create("div", "fmh-shell");
+    shell.appendChild(buildTopbar());
+
+    const route = create("section", "fmh-profile-route");
+    const hero = create("article", "fmh-profile-hero");
+    const cover = create("div", "fmh-profile-cover");
+    const coverImage = create("img");
+    coverImage.src = profile.cover_image_url || FALLBACK_COVER;
+    coverImage.alt = `${profile.display_name} cover`;
+    cover.appendChild(coverImage);
+
+    const body = create("div", "fmh-profile-body");
+    const summary = create("div", "fmh-profile-summary");
+    const title = create("div", "fmh-profile-title");
+    title.append(create("span", "fmh-profile-kicker", "Share page"), create("h1", "", profile.display_name), create("p", "", `@${profile.slug}`));
+    const meta = create("div", "fmh-profile-meta");
+    [roleLabel(profile.role), tierLabel(profile.tier)].filter(Boolean).forEach((item) => meta.appendChild(create("span", "", item)));
+    title.appendChild(meta);
+    summary.append(buildAvatar(profile, true), title);
+    body.append(summary, create("p", "fmh-profile-about", profile.bio || "This creator has not added a short bio yet."));
+
+    const actions = create("div", "fmh-profile-actions");
+    const back = create("a", "fmh-link-button", "Back to directory");
+    back.href = "/";
+    actions.appendChild(back);
+    if (profile.streamsuites_profile_url) {
+      const fullProfile = create("a", "fmh-button", "View full StreamSuites profile");
+      fullProfile.href = profile.streamsuites_profile_url;
+      fullProfile.target = "_blank";
+      fullProfile.rel = "noopener noreferrer";
+      actions.appendChild(fullProfile);
+    }
+    body.appendChild(actions);
+    hero.append(cover, body);
+    route.appendChild(hero);
+
+    const grid = create("div", "fmh-profile-grid");
+
+    const left = create("section", "fmh-profile-section");
+    left.appendChild(create("h2", "", "Primary links"));
+    const socialList = create("div", "fmh-social-list");
+    if (profile.social_links.length) {
+      profile.social_links.forEach((item) => socialList.appendChild(buildLinkItem(item)));
+    } else {
+      const empty = create("div", "fmh-empty");
+      empty.append(create("h2", "", "Links coming soon"), create("p", "", "This FindMeHere page is active, but no public platform links are available in the current profile payload yet."));
+      socialList.appendChild(empty);
+    }
+    left.appendChild(socialList);
+
+    const right = create("div", "fmh-link-stack");
+    const share = create("section", "fmh-profile-section");
+    share.append(create("h2", "", "Share this FindMeHere URL"));
+    const shareBox = create("div", "fmh-share-box");
+    shareBox.appendChild(create("p", "", "Use the standalone FindMeHere link for sharing. StreamSuites remains available separately as a secondary destination."));
+    const shareRow = create("div", "fmh-share-row");
+    const shareUrl = profile.findmehere_share_url || `${window.location.origin}/${profile.slug}`;
+    shareRow.append(create("div", "fmh-share-url", shareUrl));
+    const copyButton = create("button", "fmh-copy-button", "Copy");
+    copyButton.type = "button";
+    copyButton.addEventListener("click", () => copyText(shareUrl, copyButton));
+    shareRow.appendChild(copyButton);
+    shareBox.appendChild(shareRow);
+    share.appendChild(shareBox);
+
+    const status = create("section", "fmh-status-card");
+    status.append(create("h2", "", "Live status"));
+    const placeholder = create("div", "fmh-live-placeholder");
+    placeholder.append(create("span", "", "Future live integration"), create("p", "", "Live-now presence is not wired yet. This panel is reserved for future stream status and activity indicators."));
+    status.appendChild(placeholder);
+
+    right.append(share, status);
+    grid.append(left, right);
+    route.appendChild(grid);
+
+    shell.appendChild(route);
+    clear(root);
+    root.appendChild(shell);
+  }
+
+  async function loadDirectoryProfiles() {
+    const seed = (await fetchDirectorySeed()).map(normalizeSeedProfile).filter((item) => item.slug);
+    const hydrated = await Promise.allSettled(seed.map(async (item) => normalizePublicProfile(await fetchPublicProfile(item.slug), item)));
+    const bySlug = new Map();
+    hydrated.forEach((result) => {
+      if (result.status !== "fulfilled") return;
+      if (!result.value.slug || bySlug.has(result.value.slug)) return;
+      bySlug.set(result.value.slug, result.value);
+    });
+    return [...bySlug.values()];
+  }
+
+  async function init() {
+    const root = document.getElementById("app");
+    if (!root) return;
+
+    clear(root);
+    root.appendChild(create("div", "fmh-loading", "Loading FindMeHere"));
+
+    const slug = getRouteSlug();
+
+    try {
+      if (slug) {
+        renderProfile(root, normalizePublicProfile(await fetchPublicProfile(slug), { slug }), slug);
+        return;
+      }
+
+      renderDirectory(root, {
+        profiles: await loadDirectoryProfiles(),
+        query: "",
+        letter: "all",
+        view: "gallery"
+      });
+    } catch (_error) {
+      clear(root);
+      root.appendChild(buildUnavailableState("FindMeHere could not load the latest public profile data right now.", slug));
+    }
+  }
+
+  window.addEventListener("DOMContentLoaded", init, { once: true });
+})();
