@@ -16,6 +16,8 @@ This repository now serves as the dedicated FindMeHere public surface instead of
 - authoritative public profile hydration now runs through the same-origin Pages proxy at [`functions/api/public/profile.js`](C:\NEPTUNE LOCAL\GIT\StreamSuites-Members\functions\api\public\profile.js) to avoid browser CORS failures against the StreamSuites API
 - directory hydration now starts from the local snapshot of the authoritative StreamSuites export in [`data/findmehere-directory.json`](C:\NEPTUNE LOCAL\GIT\StreamSuites-Members\data\findmehere-directory.json)
 - directory eligibility uses canonical exported slug plus FindMeHere surface fields, while per-profile rendering is still verified against the authoritative StreamSuites public profile payload at runtime
+- the active FindMeHere directory surface supports search, A-Z filtering, and gallery/list display modes over the hydrated eligible profile set
+- standalone profile routes prominently share only the FindMeHere URL, with StreamSuites full-profile links presented as a secondary outbound action when available
 - signup, login, and profile-management calls-to-action route back toward StreamSuites
 
 ## Notes
