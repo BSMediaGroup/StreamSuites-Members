@@ -1,6 +1,6 @@
 (() => {
   const DIRECTORY_SEED_PATH = "/data/findmehere-directory.json";
-  const PUBLIC_PROFILE_ENDPOINT = "https://api.streamsuites.app/api/public/profile";
+  const PUBLIC_PROFILE_ENDPOINT = "/api/public/profile";
   const STREAMSUITES_HOME = "https://streamsuites.app";
   const FALLBACK_COVER = "/assets/placeholders/defaultprofilecover.webp";
   const RESERVED_SEGMENTS = new Set([
@@ -156,26 +156,36 @@
   }
 
   function normalizePublicProfile(profile, fallback = null) {
-    const slug = normalizeSlug(profile?.public_slug || profile?.slug || fallback?.slug);
+    const slug = normalizeSlug(
+      profile?.public_slug ||
+      profile?.slug ||
+      profile?.username ||
+      fallback?.public_slug ||
+      fallback?.slug
+    );
+    const explicitListed = profile?.is_listed;
+    const explicitEnabled = profile?.findmehere_enabled;
+    const explicitEligible = profile?.findmehere_eligible;
+    const hasCanonicalSlug = Boolean(slug);
     return {
       slug,
       public_slug: slug,
       slug_aliases: Array.isArray(profile?.slug_aliases) ? profile.slug_aliases.map((item) => normalizeSlug(item)).filter(Boolean) : [],
       user_code: String(profile?.user_code || fallback?.user_code || "").trim(),
       display_name: String(profile?.display_name || fallback?.display_name || slug).trim() || slug,
-      avatar_url: String(profile?.avatar_url || fallback?.avatar_url || "").trim(),
+      avatar_url: String(profile?.avatar_url || profile?.avatar || fallback?.avatar_url || fallback?.avatar || "").trim(),
       tier: String(profile?.tier || fallback?.tier || "").trim(),
       role: String(profile?.role || fallback?.role || "").trim(),
       account_type: String(profile?.account_type || fallback?.account_type || "").trim(),
       bio: String(profile?.bio || "").trim(),
       cover_image_url: String(profile?.cover_image_url || "").trim() || FALLBACK_COVER,
       social_links: normalizeSocialLinks(profile?.social_links),
-      is_listed: profile?.is_listed !== false,
+      is_listed: explicitListed === false ? false : profile?.listed === false ? false : profile?.community_listed === false ? false : true,
       is_anonymous: profile?.is_anonymous === true,
       streamsuites_profile_url: String(profile?.streamsuites_profile_url || "").trim(),
-      findmehere_enabled: profile?.findmehere_enabled !== false,
-      findmehere_eligible: profile?.findmehere_eligible === true,
-      findmehere_share_url: String(profile?.findmehere_share_url || "").trim(),
+      findmehere_enabled: explicitEnabled === false ? false : true,
+      findmehere_eligible: explicitEligible === false ? false : explicitEligible === true ? true : hasCanonicalSlug,
+      findmehere_share_url: String(profile?.findmehere_share_url || (hasCanonicalSlug ? `${window.location.origin}/${slug}` : "")).trim(),
       can_edit: profile?.can_edit === true
     };
   }
