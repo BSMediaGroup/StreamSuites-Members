@@ -526,6 +526,38 @@
     return bar;
   }
 
+  function buildFooter() {
+    const shell = create("footer", "fmh-footer-shell");
+    const bar = create("div", "fmh-footer-bar");
+
+    const left = create("div", "fmh-footer-cluster");
+    const links = create("div", "fmh-footer-links");
+    [
+      ["/", "Directory"],
+      ["/live", "Live"],
+      [STREAMSUITES_HOME, "StreamSuites"]
+    ].forEach(([href, label]) => {
+      const link = create("a", "fmh-footer-link", label);
+      link.href = href;
+      if (/^https?:\/\//i.test(href)) {
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+      }
+      links.appendChild(link);
+    });
+    left.appendChild(links);
+
+    const meta = create("div", "fmh-footer-meta");
+    meta.append(
+      create("span", "", "FindMeHere public directory"),
+      create("span", "", "Powered by StreamSuites")
+    );
+
+    bar.append(left, meta);
+    shell.appendChild(bar);
+    return shell;
+  }
+
   function buildHero(eligibleCount) {
     const hero = create("section", "fmh-hero");
 
@@ -731,6 +763,7 @@
     card.appendChild(actions);
     route.appendChild(card);
     shell.appendChild(route);
+    shell.appendChild(buildFooter());
     return shell;
   }
 
@@ -841,6 +874,7 @@
     }
 
     shell.appendChild(section);
+    shell.appendChild(buildFooter());
     clear(root);
     root.appendChild(shell);
   }
@@ -943,6 +977,7 @@
     }
 
     shell.appendChild(section);
+    shell.appendChild(buildFooter());
     clear(root);
     root.appendChild(shell);
   }
@@ -1092,6 +1127,7 @@
     route.appendChild(grid);
 
     shell.appendChild(route);
+    shell.appendChild(buildFooter());
     clear(root);
     root.appendChild(shell);
   }

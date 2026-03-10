@@ -87,7 +87,7 @@ body.findmehere-page input {
 .fmh-shell {
   width: min(100% - 32px, var(--fmh-max));
   margin: 0 auto;
-  padding: 22px 0 40px;
+  padding: 0 0 28px;
 }
 
 .fmh-topbar,
@@ -104,14 +104,21 @@ body.findmehere-page input {
 
 .fmh-topbar {
   position: sticky;
-  top: 16px;
+  top: 0;
   z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 14px 18px;
-  border-radius: 999px;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding: 8px max(18px, calc((100vw - var(--fmh-max)) / 2 + 18px));
+  min-height: 58px;
+  border-radius: 0;
+  border-left: 0;
+  border-right: 0;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.32);
   background:
     linear-gradient(180deg, rgba(244, 246, 250, 0.065), rgba(244, 246, 250, 0)),
     linear-gradient(160deg, rgba(21, 23, 29, 0.94), rgba(8, 9, 12, 0.96));
@@ -132,15 +139,15 @@ body.findmehere-page input {
 }
 
 .fmh-brand-wordmark {
-  width: clamp(190px, 26vw, 320px);
-  max-width: 44vw;
+  width: clamp(170px, 20vw, 252px);
+  max-width: 32vw;
   height: auto;
 }
 
 .fmh-brand-icon {
   display: none;
-  width: 48px;
-  height: 48px;
+  width: 34px;
+  height: 34px;
 }
 
 .fmh-brand-copy {
@@ -157,8 +164,8 @@ body.findmehere-page input {
 }
 
 .fmh-brand-copy strong {
-  font-size: 0.92rem;
-  letter-spacing: 0.08em;
+  font-size: 0.82rem;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
   color: var(--fmh-metal);
 }
@@ -169,8 +176,8 @@ body.findmehere-page input {
 .fmh-profile-kicker,
 .fmh-live-placeholder span {
   color: var(--fmh-muted);
-  font-size: 0.72rem;
-  letter-spacing: 0.22em;
+  font-size: 0.64rem;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
@@ -184,20 +191,31 @@ body.findmehere-page input {
   flex-wrap: wrap;
 }
 
+.fmh-topbar-actions {
+  justify-content: flex-end;
+}
+
 .fmh-button,
 .fmh-link-button,
 .fmh-view-toggle button,
 .fmh-alpha button,
 .fmh-copy-button {
-  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
   border-radius: 999px;
   border: 1px solid var(--fmh-border-strong);
-  padding: 0 16px;
+  padding: 0 15px;
   color: var(--fmh-metal);
   background:
     linear-gradient(180deg, rgba(242, 245, 250, 0.06), rgba(242, 245, 250, 0)),
     rgba(255, 255, 255, 0.03);
   cursor: pointer;
+  font-size: 0.82rem;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
   transition: transform 120ms ease, border-color 120ms ease, background 120ms ease, color 120ms ease, box-shadow 120ms ease;
 }
 
@@ -238,14 +256,14 @@ body.findmehere-page input {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
   gap: 18px;
-  margin-top: 18px;
+  margin-top: 16px;
 }
 
 .fmh-panel {
   position: relative;
   overflow: hidden;
   border-radius: var(--fmh-radius-xl);
-  padding: 24px;
+  padding: 22px;
 }
 
 .fmh-panel::before,
@@ -435,6 +453,19 @@ body.findmehere-page input {
   justify-content: space-between;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.fmh-card-footer .fmh-button,
+.fmh-card-footer .fmh-link-button,
+.fmh-row-share .fmh-button,
+.fmh-row-share .fmh-link-button,
+.fmh-profile-actions .fmh-button,
+.fmh-profile-actions .fmh-link-button,
+.fmh-topbar-actions .fmh-button,
+.fmh-topbar-actions .fmh-link-button,
+.fmh-hero-actions .fmh-button,
+.fmh-hero-actions .fmh-link-button {
+  flex: 0 0 auto;
 }
 
 .fmh-card-head,
@@ -796,6 +827,55 @@ body.findmehere-page input {
   text-align: center;
 }
 
+.fmh-footer-shell {
+  width: 100vw;
+  margin-top: 28px;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  border-top: 1px solid rgba(218, 225, 236, 0.11);
+  background: rgba(7, 9, 12, 0.74);
+  backdrop-filter: blur(14px);
+}
+
+.fmh-footer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 38px;
+  padding: 6px max(18px, calc((100vw - var(--fmh-max)) / 2 + 18px));
+}
+
+.fmh-footer-cluster,
+.fmh-footer-links,
+.fmh-footer-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.fmh-footer-link,
+.fmh-footer-meta span {
+  font-size: 0.65rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.fmh-footer-link {
+  color: rgba(226, 232, 241, 0.72);
+}
+
+.fmh-footer-link:hover,
+.fmh-footer-link:focus-visible {
+  color: #ffffff;
+  outline: none;
+}
+
+.fmh-footer-meta span {
+  color: rgba(169, 175, 186, 0.72);
+}
+
 .fmh-unavailable-card {
   display: grid;
   gap: 14px;
@@ -833,7 +913,7 @@ body.findmehere-page input {
   }
 
   .fmh-brand-wordmark {
-    width: min(280px, 52vw);
+    width: min(220px, 42vw);
     max-width: none;
   }
 }
@@ -841,7 +921,7 @@ body.findmehere-page input {
 @media (max-width: 720px) {
   .fmh-shell {
     width: min(100% - 20px, var(--fmh-max));
-    padding-top: 14px;
+    padding-top: 0;
   }
 
   .fmh-topbar,
@@ -868,7 +948,7 @@ body.findmehere-page input {
   }
 
   .fmh-topbar {
-    border-radius: 28px;
+    padding: 8px 14px;
   }
 
   .fmh-brand {
@@ -885,6 +965,7 @@ body.findmehere-page input {
 
   .fmh-topbar-actions {
     width: 100%;
+    gap: 8px;
   }
 
   .fmh-topbar-actions > * {
@@ -908,6 +989,15 @@ body.findmehere-page input {
   .fmh-profile-title h1 {
     font-size: clamp(1.55rem, 7.4vw, 2.2rem);
   }
+
+  .fmh-footer-bar {
+    padding: 6px 14px;
+    justify-content: flex-start;
+  }
+
+  .fmh-footer-meta {
+    width: 100%;
+  }
 }
 
 @media (max-width: 520px) {
@@ -922,6 +1012,17 @@ body.findmehere-page input {
   .fmh-status-card,
   .fmh-empty {
     padding: 18px;
+  }
+
+  .fmh-footer-links,
+  .fmh-footer-meta {
+    gap: 8px;
+  }
+
+  .fmh-footer-link,
+  .fmh-footer-meta span {
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
   }
 }
 
