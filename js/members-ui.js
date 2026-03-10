@@ -64,6 +64,52 @@
     return "VIEWER";
   }
 
+  function getLiveStatus(profile) {
+    return profile?.liveStatus && profile.liveStatus.isLive ? profile.liveStatus : null;
+  }
+
+  function formatViewerCount(value) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed < 0) return "";
+    return parsed.toLocaleString();
+  }
+
+  function buildLiveBadge(profile, options = {}) {
+    const liveStatus = getLiveStatus(profile);
+    if (!liveStatus) return null;
+    const badge = create("span", options.compact ? "live-badge live-badge-compact" : "live-badge", "LIVE");
+    badge.setAttribute("aria-label", `${liveStatus.providerLabel || "Live"} live now`);
+    return badge;
+  }
+
+  function buildLiveSummary(profile) {
+    const liveStatus = getLiveStatus(profile);
+    if (!liveStatus) return "";
+    const parts = [`${liveStatus.providerLabel || "Live"} live now`];
+    if (liveStatus.viewerCount != null) {
+      parts.push(`${formatViewerCount(liveStatus.viewerCount)} watching`);
+    }
+    return parts.join(" · ");
+  }
+
+  function buildProfileLiveBanner(profile) {
+    const liveStatus = getLiveStatus(profile);
+    if (!liveStatus) return null;
+    const banner = create("section", "profile-live-banner");
+    const heading = create("div", "profile-live-heading");
+    heading.append(buildLiveBadge(profile), create("span", "profile-live-summary", buildLiveSummary(profile)));
+    banner.appendChild(heading);
+    if (liveStatus.title) banner.appendChild(create("p", "profile-live-title", liveStatus.title));
+    if (liveStatus.url) {
+      const link = create("a", "profile-live-link", "Watch stream");
+      link.href = liveStatus.url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      banner.appendChild(link);
+    }
+    return banner;
+  }
+
   function buildProfileHref(profileOrCode) {
     const rawCode =
       typeof profileOrCode === "string"
@@ -75,6 +121,7 @@
 
   function buildAvatar(profile, className = "creator-avatar") {
     const avatar = create("span", className);
+    if (getLiveStatus(profile)) avatar.classList.add("is-live");
     const image = String(profile?.avatar || "").trim();
     if (image) {
       avatar.style.backgroundImage = `url(${image})`;
@@ -118,6 +165,8 @@
     if (includeRoleChip) {
       row.appendChild(create("span", "badge-role-chip", roleLabel(role)));
     }
+    const liveBadge = buildLiveBadge(profile, { compact: true });
+    if (liveBadge) row.appendChild(liveBadge);
     return row;
   }
 
@@ -164,6 +213,7 @@
     const coverUrl = String(profile.coverImageUrl || profile.cover_image_url || "").trim();
     const socialLinks = window.StreamSuitesMembersData.normalizeSocialLinks(profile.socialLinks || profile.social_links);
     const badges = Array.isArray(profile.badges) ? profile.badges : [];
+    const liveStatus = getLiveStatus(profile);
 
     setHoverDataAttr(node, "data-ss-user-code", userCode);
     setHoverDataAttr(node, "data-ss-user-id", userId);
@@ -175,6 +225,7 @@
     setHoverDataAttr(node, "data-ss-profile-href", profileHref);
     setHoverJsonAttr(node, "data-ss-social-links", socialLinks);
     setHoverJsonAttr(node, "data-ss-badges", badges);
+    setHoverJsonAttr(node, "data-ss-live-status", liveStatus);
   }
 
   function buildCreatorMeta(profile, options = {}) {
@@ -339,6 +390,7 @@
     buildSection,
     buildShareBox,
     buildSocialLinksRow,
+    buildProfileLiveBanner,
     applyProfileHoverAttrs,
     filterProfiles,
     filterNotices

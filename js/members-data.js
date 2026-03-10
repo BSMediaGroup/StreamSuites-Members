@@ -1,7 +1,8 @@
 (() => {
   const DATA_PATHS = {
     profiles: "/data/profiles.json",
-    notices: "/data/notices.json"
+    notices: "/data/notices.json",
+    liveStatus: "/data/live-status.json"
   };
 
   const FALLBACK_AVATAR = "/assets/logos/logocircle.png";
@@ -36,7 +37,15 @@
     coverImageUrl: FALLBACK_COVER,
     socialLinks: {},
     isAnonymous: false,
-    isListed: true
+    isListed: true,
+    liveStatus: null
+  });
+
+  const EMPTY_LIVE_STATUS_SNAPSHOT = Object.freeze({
+    schema_version: "v1",
+    generated_at: null,
+    providers: [],
+    creators: []
   });
 
   let cachePromise = null;
@@ -137,6 +146,97 @@
     return "core";
   }
 
+  function parseViewerCount(value) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed < 0) return null;
+    return Math.round(parsed);
+  }
+
+  function normalizeLiveStatus(raw) {
+    if (!raw || typeof raw !== "object") return null;
+    const activeStatus =
+      raw?.active_status && typeof raw.active_status === "object"
+        ? raw.active_status
+        : raw?.activeStatus && typeof raw.activeStatus === "object"
+          ? raw.activeStatus
+          : null;
+    const freshness = String(raw?.freshness || "").trim().toLowerCase();
+    const stale = raw?.stale === true || freshness === "stale";
+    const activeFreshness = String(activeStatus?.freshness || "").trim().toLowerCase();
+    const activeStale = activeStatus?.stale === true || activeFreshness === "stale";
+    const isLive = raw?.is_live === true || raw?.isLive === true;
+    if (!isLive || stale || (activeStatus && (activeStatus?.is_live !== true || activeStale))) {
+      return null;
+    }
+
+    const provider = String(raw?.active_provider || raw?.activeProvider || activeStatus?.provider || "").trim().toLowerCase();
+    return {
+      isLive: true,
+      provider,
+      providerLabel: toTitle(provider || "live"),
+      title: String(activeStatus?.live_title || activeStatus?.liveTitle || "").trim(),
+      url: String(activeStatus?.live_url || activeStatus?.liveUrl || "").trim(),
+      viewerCount: parseViewerCount(activeStatus?.viewer_count || activeStatus?.viewerCount),
+      startedAt: String(activeStatus?.started_at || activeStatus?.startedAt || "").trim(),
+      lastCheckedAt: String(
+        raw?.last_checked_at || raw?.lastCheckedAt || activeStatus?.last_checked_at || activeStatus?.lastCheckedAt || ""
+      ).trim()
+    };
+  }
+
+  function buildLiveStatusMap(payload) {
+    const map = new Map();
+    const items = Array.isArray(payload?.creators) ? payload.creators : [];
+    items.forEach((entry) => {
+      const normalized = normalizeLiveStatus(entry);
+      if (!normalized) return;
+      [
+        entry?.creator_id,
+        entry?.creatorId,
+        entry?.display_name,
+        entry?.displayName
+      ].forEach((value) => {
+        const key = normalizeUserCode(value, "");
+        if (key) map.set(key, normalized);
+      });
+    });
+    return map;
+  }
+
+  function hasEmbeddedLiveStatus(raw) {
+    if (!raw || typeof raw !== "object") return false;
+    return Object.prototype.hasOwnProperty.call(raw, "live_status") || Object.prototype.hasOwnProperty.call(raw, "liveStatus");
+  }
+
+  function resolveLiveStatus(raw, liveStatusMap) {
+    if (hasEmbeddedLiveStatus(raw)) {
+      return normalizeLiveStatus(raw?.live_status || raw?.liveStatus);
+    }
+    const direct = normalizeLiveStatus(raw);
+    if (direct) return direct;
+    const candidates = [
+      raw?.id,
+      raw?.creator_id,
+      raw?.creatorId,
+      raw?.public_slug,
+      raw?.publicSlug,
+      raw?.slug,
+      raw?.user_code,
+      raw?.userCode,
+      raw?.username,
+      raw?.display_name,
+      raw?.displayName,
+      raw?.name
+    ];
+    for (const candidate of candidates) {
+      const key = normalizeUserCode(candidate, "");
+      if (key && liveStatusMap?.has(key)) {
+        return liveStatusMap.get(key) || null;
+      }
+    }
+    return null;
+  }
+
   function platformIconFor(platform) {
     const key = normalizePlatformKey(platform);
     return PLATFORM_ICON_MAP[key] || PLATFORM_ICON_MAP.generic;
@@ -162,7 +262,7 @@
     return badges;
   }
 
-  function normalizeProfile(raw) {
+  function normalizeProfile(raw, liveStatusMap = null) {
     const userCode = normalizeUserCode(raw?.user_code || raw?.userCode || raw?.username || raw?.id);
     const role = normalizeRole(raw?.role || raw?.account_type || raw?.accountType);
     const tier = normalizeTier(raw?.tier || raw?.plan_tier || raw?.membership_tier);
@@ -184,11 +284,12 @@
       coverImageUrl: String(raw?.cover_image_url || raw?.coverImageUrl || FALLBACK_COVER).trim() || FALLBACK_COVER,
       socialLinks: normalizeSocialLinks(raw?.social_links || raw?.socialLinks),
       isAnonymous: raw?.is_anonymous === true || raw?.anonymous === true,
-      isListed: raw?.is_listed !== false && raw?.listed !== false
+      isListed: raw?.is_listed !== false && raw?.listed !== false,
+      liveStatus: resolveLiveStatus(raw, liveStatusMap)
     };
   }
 
-  function buildProfiles(items) {
+  function buildProfiles(items, liveStatusMap = null) {
     const profiles = [];
     const profilesByCode = Object.create(null);
     const profilesById = Object.create(null);
@@ -211,7 +312,7 @@
     };
 
     add({ ...DEFAULT_PROFILE });
-    items.forEach((item) => add(normalizeProfile(item)));
+    items.forEach((item) => add(normalizeProfile(item, liveStatusMap)));
 
     return { profiles, profilesByCode, profilesById, profilesByLookup };
   }
@@ -283,7 +384,10 @@
         FALLBACK_COVER,
       socialLinks: normalizeSocialLinks(payload?.social_links || payload?.socialLinks || fallbackProfile?.socialLinks),
       isAnonymous: payload?.is_anonymous === true || payload?.anonymous === true || fallbackProfile?.isAnonymous === true,
-      isListed: payload?.is_listed !== false && payload?.listed !== false && fallbackProfile?.isListed !== false
+      isListed: payload?.is_listed !== false && payload?.listed !== false && fallbackProfile?.isListed !== false,
+      liveStatus: hasEmbeddedLiveStatus(payload)
+        ? normalizeLiveStatus(payload?.live_status || payload?.liveStatus)
+        : fallbackProfile?.liveStatus || null
     };
   }
 
@@ -291,9 +395,10 @@
     if (!cachePromise) {
       cachePromise = Promise.all([
         loadJson(DATA_PATHS.profiles, { items: [] }),
-        loadJson(DATA_PATHS.notices, { items: [] })
-      ]).then(([profilesPayload, noticesPayload]) => {
-        const profileState = buildProfiles(toArray(profilesPayload));
+        loadJson(DATA_PATHS.notices, { items: [] }),
+        loadJson(DATA_PATHS.liveStatus, EMPTY_LIVE_STATUS_SNAPSHOT)
+      ]).then(([profilesPayload, noticesPayload, liveStatusPayload]) => {
+        const profileState = buildProfiles(toArray(profilesPayload), buildLiveStatusMap(liveStatusPayload));
         const notices = toArray(noticesPayload)
           .map((item, index) => normalizeNotice(item, profileState, index))
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -301,6 +406,7 @@
         return {
           ...profileState,
           notices,
+          liveStatus: liveStatusPayload,
           helpers: {
             toTimestamp,
             toTitle,
@@ -319,6 +425,7 @@
     normalizeUserCode,
     isValidUserCode,
     normalizeSocialLinks,
+    normalizeLiveStatus,
     normalizeProfilePayload,
     resolveProfile,
     platformIconFor,

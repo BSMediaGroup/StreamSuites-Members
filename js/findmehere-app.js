@@ -1,9 +1,16 @@
 (() => {
   const DIRECTORY_SEED_PATH = "/data/findmehere-directory.json";
+  const LIVE_STATUS_PATH = "/data/live-status.json";
   const PUBLIC_PROFILE_ENDPOINT = "/api/public/profile";
   const STREAMSUITES_HOME = "https://streamsuites.app";
   const FINDMEHERE_HOME = "https://findmehere.live";
   const FALLBACK_COVER = "/assets/placeholders/defaultprofilecover.webp";
+  const EMPTY_LIVE_STATUS_SNAPSHOT = Object.freeze({
+    schema_version: "v1",
+    generated_at: null,
+    providers: [],
+    creators: []
+  });
   const RESERVED_SEGMENTS = new Set([
     "",
     "assets",
@@ -92,8 +99,107 @@
     return parts.map((part) => part.charAt(0).toUpperCase()).join("");
   }
 
+  function parseViewerCount(value) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed < 0) return null;
+    return Math.round(parsed);
+  }
+
+  function normalizeLiveStatus(raw) {
+    if (!raw || typeof raw !== "object") return null;
+    const activeStatus =
+      raw?.active_status && typeof raw.active_status === "object"
+        ? raw.active_status
+        : raw?.activeStatus && typeof raw.activeStatus === "object"
+          ? raw.activeStatus
+          : null;
+    const freshness = String(raw?.freshness || "").trim().toLowerCase();
+    const stale = raw?.stale === true || freshness === "stale";
+    const activeFreshness = String(activeStatus?.freshness || "").trim().toLowerCase();
+    const activeStale = activeStatus?.stale === true || activeFreshness === "stale";
+    const isLive = raw?.is_live === true || raw?.isLive === true;
+    if (!isLive || stale || (activeStatus && (activeStatus?.is_live !== true || activeStale))) {
+      return null;
+    }
+
+    const provider = String(raw?.active_provider || raw?.activeProvider || activeStatus?.provider || "").trim().toLowerCase();
+    return {
+      isLive: true,
+      provider,
+      providerLabel: toTitle(provider || "live"),
+      title: String(activeStatus?.live_title || activeStatus?.liveTitle || "").trim(),
+      url: String(activeStatus?.live_url || activeStatus?.liveUrl || "").trim(),
+      viewerCount: parseViewerCount(activeStatus?.viewer_count || activeStatus?.viewerCount)
+    };
+  }
+
+  function buildLiveStatusMap(payload) {
+    const map = new Map();
+    const items = Array.isArray(payload?.creators) ? payload.creators : [];
+    items.forEach((entry) => {
+      const liveStatus = normalizeLiveStatus(entry);
+      if (!liveStatus) return;
+      [
+        entry?.creator_id,
+        entry?.creatorId,
+        entry?.display_name,
+        entry?.displayName
+      ].forEach((value) => {
+        const key = normalizeSlug(value);
+        if (key) map.set(key, liveStatus);
+      });
+    });
+    return map;
+  }
+
+  function resolveLiveStatus(profile, liveStatusMap) {
+    const hasEmbedded =
+      Object.prototype.hasOwnProperty.call(profile || {}, "live_status") ||
+      Object.prototype.hasOwnProperty.call(profile || {}, "liveStatus");
+    if (hasEmbedded) {
+      return normalizeLiveStatus(profile?.live_status || profile?.liveStatus);
+    }
+    const direct = normalizeLiveStatus(profile);
+    if (direct) return direct;
+    const candidates = [
+      profile?.slug,
+      profile?.public_slug,
+      profile?.user_code,
+      profile?.display_name,
+      profile?.displayName
+    ];
+    for (const candidate of candidates) {
+      const key = normalizeSlug(candidate);
+      if (key && liveStatusMap?.has(key)) return liveStatusMap.get(key) || null;
+    }
+    return null;
+  }
+
+  function getLiveStatus(profile) {
+    return profile?.live_status && profile.live_status.isLive ? profile.live_status : null;
+  }
+
+  function buildLiveBadge(profile, compact = false) {
+    const liveStatus = getLiveStatus(profile);
+    if (!liveStatus) return null;
+    const badge = create("span", compact ? "fmh-live-badge fmh-live-badge-compact" : "fmh-live-badge", "LIVE");
+    badge.setAttribute("aria-label", `${liveStatus.providerLabel || "Live"} live now`);
+    return badge;
+  }
+
+  function buildLiveSummary(profile) {
+    const liveStatus = getLiveStatus(profile);
+    if (!liveStatus) return "";
+    const parts = [`${liveStatus.providerLabel || "Live"} live now`];
+    if (liveStatus.viewerCount != null) {
+      parts.push(`${liveStatus.viewerCount.toLocaleString()} watching`);
+    }
+    return parts.join(" · ");
+  }
+
   function buildAvatar(profile, large = false) {
     const wrap = create("div", large ? "fmh-profile-avatar" : "fmh-avatar");
+    if (getLiveStatus(profile)) wrap.classList.add("is-live");
     const url = String(profile?.avatar_url || "").trim();
     if (url) {
       const image = create("img");
@@ -196,6 +302,14 @@
     return Array.isArray(payload?.items) ? payload.items : [];
   }
 
+  async function fetchLiveStatusMap() {
+    try {
+      return buildLiveStatusMap(await fetchJson(LIVE_STATUS_PATH));
+    } catch (_error) {
+      return buildLiveStatusMap(EMPTY_LIVE_STATUS_SNAPSHOT);
+    }
+  }
+
   async function fetchPublicProfile(slug) {
     const endpoint = buildAppUrl(PUBLIC_PROFILE_ENDPOINT);
     endpoint.searchParams.set("slug", slug);
@@ -229,7 +343,7 @@
     };
   }
 
-  function normalizePublicProfile(profile, fallback = null) {
+  function normalizePublicProfile(profile, fallback = null, liveStatusMap = null) {
     const slug = normalizeSlug(
       profile?.public_slug ||
       profile?.slug ||
@@ -261,7 +375,8 @@
       findmehere_enabled: explicitEnabled === false ? false : true,
       findmehere_eligible: explicitEligible === false ? false : explicitEligible === true ? true : hasCanonicalSlug,
       findmehere_share_url: String(profile?.findmehere_share_url || fallback?.findmehere_share_url || (hasCanonicalSlug ? `${window.location.origin}/${slug}` : "")).trim(),
-      can_edit: profile?.can_edit === true
+      can_edit: profile?.can_edit === true,
+      live_status: resolveLiveStatus(profile, liveStatusMap) || resolveLiveStatus(fallback, liveStatusMap)
     };
   }
 
@@ -393,6 +508,8 @@
     const copy = create("div", "fmh-name-block");
     const line = create("div", "fmh-name-line");
     line.append(create("strong", "", profile.display_name), create("span", "fmh-handle", `@${profile.slug}`));
+    const liveBadge = buildLiveBadge(profile, true);
+    if (liveBadge) line.appendChild(liveBadge);
     copy.append(line, create("p", "", profile.bio || "FindMeHere share page"));
     head.append(buildAvatar(profile), copy);
 
@@ -414,7 +531,11 @@
     const row = create("article", "fmh-directory-row");
     const head = create("div", "fmh-row-head");
     const copy = create("div", "fmh-row-copy");
-    copy.append(create("strong", "", profile.display_name), create("p", "", profile.bio || `Share page for @${profile.slug}`));
+    const title = create("div", "fmh-name-line");
+    title.append(create("strong", "", profile.display_name));
+    const liveBadge = buildLiveBadge(profile, true);
+    if (liveBadge) title.appendChild(liveBadge);
+    copy.append(title, create("p", "", profile.bio || `Share page for @${profile.slug}`));
     head.append(buildAvatar(profile), copy);
 
     const meta = create("div", "fmh-row-meta");
@@ -611,12 +732,30 @@
     const body = create("div", "fmh-profile-body");
     const summary = create("div", "fmh-profile-summary");
     const title = create("div", "fmh-profile-title");
-    title.append(create("span", "fmh-profile-kicker", "Share page"), create("h1", "", profile.display_name), create("p", "", `@${profile.slug}`));
+    title.append(create("span", "fmh-profile-kicker", "Share page"));
+    const titleRow = create("div", "fmh-profile-title-row");
+    titleRow.append(create("h1", "", profile.display_name));
+    const liveBadge = buildLiveBadge(profile);
+    if (liveBadge) titleRow.appendChild(liveBadge);
+    title.append(titleRow, create("p", "", `@${profile.slug}`));
     const meta = create("div", "fmh-profile-meta");
     [roleLabel(profile.role), tierLabel(profile.tier), ...getPrimaryPlatforms(profile)].filter(Boolean).forEach((item) => meta.appendChild(create("span", "", item)));
     title.appendChild(meta);
     summary.append(buildAvatar(profile, true), title);
     body.append(summary, create("p", "fmh-profile-about", profile.bio || "This creator has not added a short bio yet."));
+    if (getLiveStatus(profile)) {
+      const banner = create("div", "fmh-live-banner");
+      banner.appendChild(create("span", "fmh-live-summary", buildLiveSummary(profile)));
+      if (profile.live_status?.title) banner.appendChild(create("p", "fmh-live-title", profile.live_status.title));
+      if (profile.live_status?.url) {
+        const watch = create("a", "fmh-live-link", "Watch stream");
+        watch.href = profile.live_status.url;
+        watch.target = "_blank";
+        watch.rel = "noopener noreferrer";
+        banner.appendChild(watch);
+      }
+      body.appendChild(banner);
+    }
 
     const actions = create("div", "fmh-profile-actions");
     const back = create("a", "fmh-link-button", "Back to directory");
@@ -704,11 +843,11 @@
     root.appendChild(shell);
   }
 
-  async function loadDirectoryProfiles() {
+  async function loadDirectoryProfiles(liveStatusMap) {
     const seed = (await fetchDirectorySeed()).map(normalizeSeedProfile).filter((item) => item.slug);
     const bySlug = new Map();
     seed.forEach((item) => {
-      const normalized = normalizePublicProfile(item, item);
+      const normalized = normalizePublicProfile(item, item, liveStatusMap);
       if (!normalized.slug || bySlug.has(normalized.slug)) return;
       bySlug.set(normalized.slug, normalized);
     });
@@ -723,15 +862,16 @@
     root.appendChild(create("div", "fmh-loading", "Loading FindMeHere"));
 
     const slug = getRouteSlug();
+    const liveStatusMap = await fetchLiveStatusMap();
 
     try {
       if (slug) {
-        renderProfile(root, normalizePublicProfile(await fetchPublicProfile(slug), { slug }), slug);
+        renderProfile(root, normalizePublicProfile(await fetchPublicProfile(slug), { slug }, liveStatusMap), slug);
         return;
       }
 
       renderDirectory(root, {
-        profiles: await loadDirectoryProfiles(),
+        profiles: await loadDirectoryProfiles(liveStatusMap),
         ...getInitialDirectoryState()
       });
     } catch (_error) {

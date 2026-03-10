@@ -360,6 +360,7 @@ body.findmehere-page input {
   place-items: center;
   color: #1a1110;
   background: linear-gradient(135deg, rgba(255, 141, 92, 0.92), rgba(240, 199, 94, 0.92));
+  position: relative;
   overflow: hidden;
 }
 
@@ -387,6 +388,22 @@ body.findmehere-page input {
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.fmh-avatar.is-live,
+.fmh-profile-avatar.is-live {
+  box-shadow: 0 0 0 3px rgba(255, 72, 72, 0.24);
+}
+
+.fmh-avatar.is-live::after,
+.fmh-profile-avatar.is-live::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: inherit;
+  border: 2px solid rgba(255, 72, 72, 0.82);
+  animation: fmh-live-pulse 1.8s ease-out infinite;
+  pointer-events: none;
 }
 
 .fmh-name-block,
@@ -493,6 +510,70 @@ body.findmehere-page input {
   line-height: 0.95;
 }
 
+.fmh-profile-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.fmh-live-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 94, 94, 0.52);
+  background: linear-gradient(180deg, rgba(255, 89, 89, 0.24), rgba(112, 18, 18, 0.92));
+  color: #fff3f1;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.fmh-live-badge-compact {
+  min-height: 18px;
+  padding: 0 8px;
+  font-size: 0.54rem;
+}
+
+.fmh-live-banner {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: var(--fmh-radius-lg);
+  border: 1px solid rgba(255, 94, 94, 0.24);
+  background: linear-gradient(180deg, rgba(88, 16, 16, 0.34), rgba(18, 12, 14, 0.86));
+}
+
+.fmh-live-summary {
+  color: #ffd7d3;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.fmh-live-title {
+  margin: 0;
+  color: #fff0ed;
+  line-height: 1.45;
+}
+
+.fmh-live-link {
+  width: fit-content;
+  color: #ffd5d0;
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.fmh-live-link:hover,
+.fmh-live-link:focus-visible {
+  color: #fff0ed;
+}
+
 .fmh-profile-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.9fr);
@@ -558,6 +639,21 @@ body.findmehere-page input {
 .fmh-link-stack {
   display: grid;
   gap: 10px;
+}
+
+@keyframes fmh-live-pulse {
+  0% {
+    opacity: 0.88;
+    transform: scale(0.92);
+  }
+  70% {
+    opacity: 0;
+    transform: scale(1.18);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.18);
+  }
 }
 
 .fmh-destination-box {
@@ -661,5 +757,14 @@ body.findmehere-page input {
     min-width: 88px;
     border-radius: 24px;
     font-size: 1.7rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fmh-avatar.is-live::after,
+  .fmh-profile-avatar.is-live::after {
+    animation: none;
+    opacity: 0.65;
+    transform: none;
   }
 }

@@ -105,6 +105,8 @@
     profileCard.appendChild(coverWrap);
 
     profileCard.appendChild(window.StreamSuitesMembersUi.buildCreatorMeta(profile, { expanded: true, includeRoleChip: true }));
+    const liveBanner = window.StreamSuitesMembersUi.buildProfileLiveBanner(profile);
+    if (liveBanner) profileCard.appendChild(liveBanner);
 
     const socialHeader = create("div", "profile-inline-header");
     socialHeader.append(create("h3", "", "Social Links"));
