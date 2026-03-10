@@ -1,17 +1,21 @@
 :root {
-  --fmh-bg: #120f11;
-  --fmh-bg-alt: #1a1317;
-  --fmh-panel: rgba(29, 20, 26, 0.78);
-  --fmh-panel-strong: rgba(41, 28, 36, 0.92);
-  --fmh-border: rgba(245, 215, 183, 0.16);
-  --fmh-border-strong: rgba(245, 215, 183, 0.3);
-  --fmh-text: #f7f2eb;
-  --fmh-muted: #cbbcae;
-  --fmh-accent: #ff8d5c;
-  --fmh-accent-soft: rgba(255, 141, 92, 0.18);
-  --fmh-accent-2: #f0c75e;
-  --fmh-success: #92d36e;
-  --fmh-shadow: 0 24px 60px rgba(0, 0, 0, 0.34);
+  --fmh-bg: #050608;
+  --fmh-bg-alt: #0b0d10;
+  --fmh-bg-elevated: #111418;
+  --fmh-panel: linear-gradient(160deg, rgba(22, 24, 29, 0.9), rgba(10, 11, 14, 0.92));
+  --fmh-panel-strong: linear-gradient(160deg, rgba(28, 31, 37, 0.96), rgba(11, 12, 16, 0.98));
+  --fmh-panel-soft: rgba(14, 16, 20, 0.72);
+  --fmh-border: rgba(213, 220, 231, 0.12);
+  --fmh-border-strong: rgba(224, 231, 240, 0.22);
+  --fmh-text: #eef1f5;
+  --fmh-muted: #a9afba;
+  --fmh-metal: #d7dce5;
+  --fmh-metal-low: #9097a3;
+  --fmh-red: #b21f2d;
+  --fmh-red-bright: #df3d4b;
+  --fmh-red-soft: rgba(178, 31, 45, 0.18);
+  --fmh-glow: rgba(255, 255, 255, 0.08);
+  --fmh-shadow: 0 28px 80px rgba(0, 0, 0, 0.5);
   --fmh-radius-xl: 28px;
   --fmh-radius-lg: 20px;
   --fmh-radius-md: 14px;
@@ -28,13 +32,40 @@ body {
 }
 
 body.findmehere-page {
+  position: relative;
   margin: 0;
   color: var(--fmh-text);
   font-family: "SuiGenerisRg", "Segoe UI", sans-serif;
   background:
-    radial-gradient(680px 360px at 8% 0%, rgba(255, 141, 92, 0.2), transparent 72%),
-    radial-gradient(540px 320px at 92% 8%, rgba(240, 199, 94, 0.14), transparent 70%),
-    linear-gradient(180deg, #0f0c0e 0%, var(--fmh-bg) 54%, #090709 100%);
+    radial-gradient(880px 420px at 18% -4%, rgba(218, 225, 237, 0.08), transparent 68%),
+    radial-gradient(720px 420px at 100% 8%, rgba(178, 31, 45, 0.16), transparent 64%),
+    radial-gradient(640px 360px at 50% 100%, rgba(255, 255, 255, 0.035), transparent 70%),
+    linear-gradient(180deg, #07080a 0%, #0a0c10 34%, #040507 100%);
+  overflow-x: hidden;
+}
+
+body.findmehere-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.055;
+  background-image:
+    linear-gradient(rgba(230, 236, 244, 0.5) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(230, 236, 244, 0.45) 1px, transparent 1px);
+  background-size: 56px 56px;
+  background-position: center top;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.56), rgba(0, 0, 0, 0.14) 38%, transparent 92%);
+}
+
+body.findmehere-page::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(540px 220px at 50% 0%, rgba(255, 255, 255, 0.06), transparent 70%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.28) 65%, rgba(0, 0, 0, 0.62) 100%);
 }
 
 body.findmehere-page a {
@@ -48,7 +79,9 @@ body.findmehere-page input {
 }
 
 #app {
+  position: relative;
   min-height: 100vh;
+  z-index: 1;
 }
 
 .fmh-shell {
@@ -66,40 +99,54 @@ body.findmehere-page input {
   border: 1px solid var(--fmh-border);
   background: var(--fmh-panel);
   box-shadow: var(--fmh-shadow);
-  backdrop-filter: blur(14px);
+  backdrop-filter: blur(16px);
 }
 
 .fmh-topbar {
+  position: sticky;
+  top: 16px;
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   padding: 14px 18px;
   border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(244, 246, 250, 0.065), rgba(244, 246, 250, 0)),
+    linear-gradient(160deg, rgba(21, 23, 29, 0.94), rgba(8, 9, 12, 0.96));
 }
 
 .fmh-brand {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
+  min-width: 0;
 }
 
-.fmh-brand-mark {
-  width: 44px;
-  height: 44px;
-  border-radius: 16px;
-  display: grid;
-  place-items: center;
-  font-family: "RechargeBd", sans-serif;
-  font-size: 0.95rem;
-  letter-spacing: 0.08em;
-  color: #130d10;
-  background: linear-gradient(135deg, var(--fmh-accent), var(--fmh-accent-2));
+.fmh-brand-wordmark,
+.fmh-brand-icon {
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.45));
+}
+
+.fmh-brand-wordmark {
+  width: clamp(190px, 26vw, 320px);
+  max-width: 44vw;
+  height: auto;
+}
+
+.fmh-brand-icon {
+  display: none;
+  width: 48px;
+  height: 48px;
 }
 
 .fmh-brand-copy {
   display: grid;
   gap: 4px;
+  min-width: 0;
 }
 
 .fmh-brand-copy strong,
@@ -109,6 +156,13 @@ body.findmehere-page input {
   font-family: "RechargeBd", sans-serif;
 }
 
+.fmh-brand-copy strong {
+  font-size: 0.92rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fmh-metal);
+}
+
 .fmh-brand-copy span,
 .fmh-hero-kicker,
 .fmh-section-title span,
@@ -116,7 +170,7 @@ body.findmehere-page input {
 .fmh-live-placeholder span {
   color: var(--fmh-muted);
   font-size: 0.72rem;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
 }
 
@@ -139,10 +193,12 @@ body.findmehere-page input {
   border-radius: 999px;
   border: 1px solid var(--fmh-border-strong);
   padding: 0 16px;
-  color: var(--fmh-text);
-  background: rgba(255, 255, 255, 0.04);
+  color: var(--fmh-metal);
+  background:
+    linear-gradient(180deg, rgba(242, 245, 250, 0.06), rgba(242, 245, 250, 0)),
+    rgba(255, 255, 255, 0.03);
   cursor: pointer;
-  transition: transform 120ms ease, border-color 120ms ease, background 120ms ease, color 120ms ease;
+  transition: transform 120ms ease, border-color 120ms ease, background 120ms ease, color 120ms ease, box-shadow 120ms ease;
 }
 
 .fmh-button:hover,
@@ -156,30 +212,52 @@ body.findmehere-page input {
 .fmh-alpha button:focus-visible,
 .fmh-copy-button:focus-visible {
   transform: translateY(-1px);
-  border-color: rgba(255, 141, 92, 0.5);
-  background: rgba(255, 141, 92, 0.1);
-  color: #fff6f0;
+  border-color: rgba(223, 61, 75, 0.46);
+  background:
+    linear-gradient(180deg, rgba(223, 61, 75, 0.15), rgba(223, 61, 75, 0.04)),
+    rgba(255, 255, 255, 0.035);
+  color: #fff8f9;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.24);
   outline: none;
 }
 
 .fmh-button-primary,
 .fmh-view-toggle button.is-active,
 .fmh-alpha button.is-active {
-  color: #1a1110;
-  border-color: transparent;
-  background: linear-gradient(135deg, var(--fmh-accent), var(--fmh-accent-2));
+  color: #fff4f5;
+  border-color: rgba(226, 79, 94, 0.62);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0)),
+    linear-gradient(135deg, #5f0d16 0%, #a81928 48%, #d63a48 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 18px 34px rgba(96, 10, 19, 0.34);
 }
 
 .fmh-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+  grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
   gap: 18px;
   margin-top: 18px;
 }
 
 .fmh-panel {
+  position: relative;
+  overflow: hidden;
   border-radius: var(--fmh-radius-xl);
   padding: 24px;
+}
+
+.fmh-panel::before,
+.fmh-profile-hero::before,
+.fmh-profile-section::before,
+.fmh-empty::before,
+.fmh-status-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 22%);
 }
 
 .fmh-hero-copy {
@@ -189,8 +267,10 @@ body.findmehere-page input {
 
 .fmh-hero-copy h1 {
   margin: 0;
-  font-size: clamp(2.6rem, 5vw, 5rem);
-  line-height: 0.94;
+  max-width: 13ch;
+  font-size: clamp(1.75rem, 3.1vw, 3.05rem);
+  line-height: 0.96;
+  letter-spacing: 0.02em;
 }
 
 .fmh-hero-copy p,
@@ -206,7 +286,7 @@ body.findmehere-page input {
 .fmh-live-placeholder p {
   margin: 0;
   color: var(--fmh-muted);
-  line-height: 1.65;
+  line-height: 1.68;
 }
 
 .fmh-stat-grid {
@@ -216,16 +296,20 @@ body.findmehere-page input {
 }
 
 .fmh-stat-card {
+  position: relative;
   padding: 16px;
   border-radius: var(--fmh-radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(216, 224, 236, 0.11);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0)),
+    rgba(255, 255, 255, 0.02);
 }
 
 .fmh-stat-card strong {
   display: block;
-  font-size: 1.6rem;
+  font-size: 1.45rem;
   margin-bottom: 8px;
+  color: var(--fmh-metal);
 }
 
 .fmh-search-wrap {
@@ -241,7 +325,9 @@ body.findmehere-page input {
   padding: 14px 18px;
   border-radius: 999px;
   border: 1px solid var(--fmh-border);
-  background: rgba(11, 8, 10, 0.72);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0)),
+    rgba(7, 8, 11, 0.82);
 }
 
 .fmh-search-shell input {
@@ -250,6 +336,10 @@ body.findmehere-page input {
   background: transparent;
   color: var(--fmh-text);
   outline: none;
+}
+
+.fmh-search-shell input::placeholder {
+  color: #848b97;
 }
 
 .fmh-search-actions,
@@ -276,7 +366,8 @@ body.findmehere-page input {
 .fmh-status-card h2 {
   margin: 0;
   font-size: 1.02rem;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .fmh-directory-controls {
@@ -317,7 +408,7 @@ body.findmehere-page input {
 .fmh-directory-row,
 .fmh-social-item {
   border-radius: var(--fmh-radius-lg);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(214, 221, 233, 0.1);
   background: var(--fmh-panel-strong);
 }
 
@@ -359,10 +450,13 @@ body.findmehere-page input {
 .fmh-profile-avatar {
   display: grid;
   place-items: center;
-  color: #1a1110;
-  background: linear-gradient(135deg, rgba(255, 141, 92, 0.92), rgba(240, 199, 94, 0.92));
+  color: #0f1115;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0)),
+    linear-gradient(145deg, #f1f4f8 0%, #b9c0ca 48%, #727985 100%);
   position: relative;
   overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 .fmh-avatar {
@@ -393,7 +487,9 @@ body.findmehere-page input {
 
 .fmh-avatar.is-live,
 .fmh-profile-avatar.is-live {
-  box-shadow: 0 0 0 3px rgba(255, 72, 72, 0.24);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 0 0 3px rgba(178, 31, 45, 0.18);
 }
 
 .fmh-avatar.is-live::after,
@@ -402,7 +498,7 @@ body.findmehere-page input {
   position: absolute;
   inset: -5px;
   border-radius: inherit;
-  border: 2px solid rgba(255, 72, 72, 0.82);
+  border: 2px solid rgba(223, 61, 75, 0.72);
   animation: fmh-live-pulse 1.8s ease-out infinite;
   pointer-events: none;
 }
@@ -427,7 +523,7 @@ body.findmehere-page input {
 .fmh-handle,
 .fmh-chip,
 .fmh-result-summary strong {
-  color: var(--fmh-accent-2);
+  color: #f0f3f8;
 }
 
 .fmh-chip {
@@ -437,8 +533,10 @@ body.findmehere-page input {
   min-height: 26px;
   padding: 0 10px;
   border-radius: 999px;
-  border: 1px solid rgba(240, 199, 94, 0.22);
-  background: rgba(240, 199, 94, 0.08);
+  border: 1px solid rgba(219, 226, 237, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0)),
+    rgba(255, 255, 255, 0.035);
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -460,9 +558,10 @@ body.findmehere-page input {
   min-height: 26px;
   padding: 0 10px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(218, 225, 236, 0.11);
+  background: rgba(255, 255, 255, 0.03);
   font-size: 0.72rem;
+  color: #d1d7e1;
 }
 
 .fmh-card-url,
@@ -483,13 +582,16 @@ body.findmehere-page input {
 }
 
 .fmh-profile-hero {
+  position: relative;
   overflow: hidden;
   border-radius: var(--fmh-radius-xl);
 }
 
 .fmh-profile-cover {
   height: clamp(220px, 34vw, 320px);
-  background: #1a1417;
+  background:
+    radial-gradient(520px 240px at 50% 0%, rgba(255, 255, 255, 0.08), transparent 65%),
+    linear-gradient(180deg, #16191e 0%, #0d1014 100%);
 }
 
 .fmh-profile-body {
@@ -507,8 +609,9 @@ body.findmehere-page input {
 
 .fmh-profile-title h1 {
   margin: 0;
-  font-size: clamp(2.2rem, 4vw, 3.6rem);
-  line-height: 0.95;
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  line-height: 0.96;
+  letter-spacing: 0.02em;
 }
 
 .fmh-profile-title-row {
@@ -525,9 +628,9 @@ body.findmehere-page input {
   min-height: 24px;
   padding: 0 10px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 94, 94, 0.52);
-  background: linear-gradient(180deg, rgba(255, 89, 89, 0.24), rgba(112, 18, 18, 0.92));
-  color: #fff3f1;
+  border: 1px solid rgba(225, 72, 87, 0.5);
+  background: linear-gradient(180deg, rgba(211, 44, 58, 0.28), rgba(84, 10, 17, 0.92));
+  color: #fff3f4;
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -545,12 +648,14 @@ body.findmehere-page input {
   gap: 8px;
   padding: 14px 16px;
   border-radius: var(--fmh-radius-lg);
-  border: 1px solid rgba(255, 94, 94, 0.24);
-  background: linear-gradient(180deg, rgba(88, 16, 16, 0.34), rgba(18, 12, 14, 0.86));
+  border: 1px solid rgba(228, 83, 98, 0.2);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)),
+    linear-gradient(180deg, rgba(99, 11, 22, 0.52), rgba(19, 10, 13, 0.94));
 }
 
 .fmh-live-summary {
-  color: #ffd7d3;
+  color: #ffe0e3;
   font-size: 0.78rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -558,13 +663,13 @@ body.findmehere-page input {
 
 .fmh-live-title {
   margin: 0;
-  color: #fff0ed;
+  color: #fff4f5;
   line-height: 1.45;
 }
 
 .fmh-live-link {
   width: fit-content;
-  color: #ffd5d0;
+  color: #ffdfe2;
   font-size: 0.76rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -572,7 +677,7 @@ body.findmehere-page input {
 
 .fmh-live-link:hover,
 .fmh-live-link:focus-visible {
-  color: #fff0ed;
+  color: #ffffff;
 }
 
 .fmh-profile-grid {
@@ -583,6 +688,7 @@ body.findmehere-page input {
 
 .fmh-profile-section,
 .fmh-status-card {
+  position: relative;
   border-radius: var(--fmh-radius-xl);
   padding: 22px;
   display: grid;
@@ -609,8 +715,10 @@ body.findmehere-page input {
   gap: 10px;
   padding: 14px;
   border-radius: var(--fmh-radius-lg);
-  background: rgba(255, 141, 92, 0.08);
-  border: 1px solid rgba(255, 141, 92, 0.2);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)),
+    rgba(178, 31, 45, 0.08);
+  border: 1px solid rgba(228, 79, 94, 0.2);
 }
 
 .fmh-share-row {
@@ -624,16 +732,16 @@ body.findmehere-page input {
   min-width: 0;
   padding: 12px 14px;
   border-radius: 14px;
-  background: rgba(14, 10, 12, 0.76);
-  color: #fcefe7;
+  background: rgba(7, 8, 10, 0.76);
+  color: #f3f6fb;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .fmh-copy-button.is-copied {
-  color: #12200f;
-  background: var(--fmh-success);
+  color: #fff8f9;
+  background: linear-gradient(135deg, #7d151f, #c52e3c);
   border-color: transparent;
 }
 
@@ -662,8 +770,8 @@ body.findmehere-page input {
   gap: 12px;
   padding: 14px;
   border-radius: var(--fmh-radius-lg);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(220, 227, 238, 0.08);
 }
 
 .fmh-destination-box p {
@@ -677,11 +785,12 @@ body.findmehere-page input {
   gap: 10px;
   padding: 18px;
   border-radius: var(--fmh-radius-lg);
-  border: 1px dashed rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed rgba(216, 223, 235, 0.12);
+  background: rgba(255, 255, 255, 0.025);
 }
 
 .fmh-empty {
+  position: relative;
   border-radius: var(--fmh-radius-xl);
   padding: 24px;
   text-align: center;
@@ -694,8 +803,8 @@ body.findmehere-page input {
 
 .fmh-unavailable-card h1 {
   margin: 0;
-  font-size: clamp(2.1rem, 4vw, 3.4rem);
-  line-height: 0.95;
+  font-size: clamp(1.9rem, 3.6vw, 2.8rem);
+  line-height: 0.96;
 }
 
 .fmh-unavailable-actions {
@@ -717,6 +826,15 @@ body.findmehere-page input {
   .fmh-hero,
   .fmh-profile-grid {
     grid-template-columns: 1fr;
+  }
+
+  .fmh-brand-copy {
+    display: none;
+  }
+
+  .fmh-brand-wordmark {
+    width: min(280px, 52vw);
+    max-width: none;
   }
 }
 
@@ -753,12 +871,57 @@ body.findmehere-page input {
     border-radius: 28px;
   }
 
+  .fmh-brand {
+    gap: 10px;
+  }
+
+  .fmh-brand-wordmark {
+    display: none;
+  }
+
+  .fmh-brand-icon {
+    display: block;
+  }
+
+  .fmh-topbar-actions {
+    width: 100%;
+  }
+
+  .fmh-topbar-actions > * {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .fmh-hero-copy h1 {
+    max-width: 12ch;
+    font-size: clamp(1.55rem, 8vw, 2.2rem);
+  }
+
   .fmh-profile-avatar {
     width: 88px;
     height: 88px;
     min-width: 88px;
     border-radius: 24px;
     font-size: 1.7rem;
+  }
+
+  .fmh-profile-title h1 {
+    font-size: clamp(1.55rem, 7.4vw, 2.2rem);
+  }
+}
+
+@media (max-width: 520px) {
+  body.findmehere-page::before {
+    background-size: 44px 44px;
+    opacity: 0.045;
+  }
+
+  .fmh-panel,
+  .fmh-profile-body,
+  .fmh-profile-section,
+  .fmh-status-card,
+  .fmh-empty {
+    padding: 18px;
   }
 }
 

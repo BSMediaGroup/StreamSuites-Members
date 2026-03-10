@@ -5,6 +5,8 @@
   const STREAMSUITES_HOME = "https://streamsuites.app";
   const FINDMEHERE_HOME = "https://findmehere.live";
   const FALLBACK_COVER = "/assets/placeholders/defaultprofilecover.webp";
+  const FMH_WORDMARK_BLOCK_LOGO = "/assets/logos/fmhwordmarkblockx.webp";
+  const FMH_ICON_LOGO = "/assets/logos/fmhlogo.png";
   const EMPTY_LIVE_STATUS_SNAPSHOT = Object.freeze({
     schema_version: "v1",
     generated_at: null,
@@ -491,14 +493,20 @@
 
     const brand = create("a", "fmh-brand");
     brand.href = "/";
-    brand.append(
-      create("div", "fmh-brand-mark", "FMH"),
-      (() => {
-        const copy = create("div", "fmh-brand-copy");
-        copy.append(create("strong", "", "FindMeHere"), create("span", "", "Standalone share pages"));
-        return copy;
-      })()
-    );
+    const brandWordmark = create("img", "fmh-brand-wordmark");
+    brandWordmark.src = FMH_WORDMARK_BLOCK_LOGO;
+    brandWordmark.alt = "FindMeHere";
+    brandWordmark.decoding = "async";
+
+    const brandIcon = create("img", "fmh-brand-icon");
+    brandIcon.src = FMH_ICON_LOGO;
+    brandIcon.alt = "FindMeHere";
+    brandIcon.decoding = "async";
+
+    const copy = create("div", "fmh-brand-copy");
+    copy.append(create("strong", "", "FindMeHere"), create("span", "", "Premium share-first creator pages"));
+
+    brand.append(brandWordmark, brandIcon, copy);
 
     const actions = create("div", "fmh-topbar-actions");
     const live = create("a", "fmh-link-button", "Live now");
@@ -524,8 +532,8 @@
     const left = create("div", "fmh-panel fmh-hero-copy");
     left.append(
       create("span", "fmh-hero-kicker", "findmehere.live"),
-      create("h1", "", "Share-first profiles for the StreamSuites network."),
-      create("p", "", "FindMeHere is the lightweight discovery surface for public share pages. Creator identity stays authoritative in StreamSuites, while this surface stays focused on clean directory browsing and direct profile links.")
+      create("h1", "", "Premium creator pages, built to share cleanly."),
+      create("p", "", "FindMeHere is the focused public surface for StreamSuites creators: clean profile discovery, direct share links, and a darker premium presentation that keeps the creator identity front and center.")
     );
     const actions = create("div", "fmh-hero-actions");
     const browse = create("a", "fmh-button fmh-button-primary", "Browse directory");
@@ -853,8 +861,8 @@
     const left = create("div", "fmh-panel fmh-hero-copy");
     left.append(
       create("span", "fmh-hero-kicker", "findmehere.live/live"),
-      create("h1", "", "Live creators, filtered for FindMeHere."),
-      create("p", "", "This view only shows creators who are live on the authoritative StreamSuites payload and still eligible to appear on the FindMeHere share surface.")
+      create("h1", "", "Live right now on FindMeHere."),
+      create("p", "", "This view keeps the live surface tight: only creators who are currently live in the authoritative StreamSuites payload and still eligible for FindMeHere.")
     );
     const heroActions = create("div", "fmh-hero-actions");
     const backToDirectory = create("a", "fmh-button fmh-button-primary", "Browse directory");
