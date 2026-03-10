@@ -145,6 +145,7 @@
 
   function renderSettings(ctx) {
     const { host, authState } = ctx;
+    const toast = window.StreamSuitesMembersToast;
     clear(host);
     host.appendChild(
       window.StreamSuitesMembersUi.buildPageHeading(
@@ -231,9 +232,18 @@
         Object.entries(socialInputs).forEach(([key, input]) => {
           input.value = normalizedSocial[key] || "";
         });
-        status.textContent = "Saved";
+        status.textContent = "";
+        toast?.success?.("Profile settings saved.", {
+          key: "members-settings-save",
+          title: "Saved"
+        });
       } catch (error) {
-        status.textContent = error instanceof Error ? error.message : "Save failed";
+        status.textContent = "";
+        toast?.error?.(error instanceof Error ? error.message : "Save failed", {
+          key: "members-settings-save",
+          title: "Save failed",
+          autoDismissMs: 6800
+        });
       } finally {
         saveButton.disabled = false;
       }
@@ -255,7 +265,12 @@
           input.value = social[key] || "";
         });
       } catch (_error) {
-        status.textContent = "Unable to load settings from Auth API.";
+        status.textContent = "";
+        toast?.error?.("Unable to load settings from Auth API.", {
+          key: "members-settings-load",
+          title: "Load failed",
+          autoDismissMs: 6800
+        });
       }
     })();
   }

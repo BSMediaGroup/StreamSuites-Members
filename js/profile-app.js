@@ -89,6 +89,7 @@
   }
 
   function buildProfilePage(root, profile, canEdit, isPlaceholder) {
+    const toast = window.StreamSuitesMembersToast;
     document.title = `${profile.displayName} | StreamSuites Members`;
     const wrap = buildStandaloneShell(root);
 
@@ -143,10 +144,22 @@
           const updated = await window.StreamSuitesMembersSession.saveMyPublicProfile({ anonymous: toggle.checked });
           profile.isAnonymous = updated?.is_anonymous === true || updated?.anonymous === true;
           toggle.checked = profile.isAnonymous;
-          status.textContent = profile.isAnonymous ? "Anonymous enabled" : "Public profile enabled";
+          status.textContent = "";
+          toast?.success?.(
+            profile.isAnonymous ? "Anonymous mode enabled." : "Public profile visibility restored.",
+            {
+              key: "members-profile-privacy",
+              title: "Profile updated"
+            }
+          );
         } catch (error) {
           toggle.checked = !toggle.checked;
-          status.textContent = error instanceof Error ? error.message : "Save failed";
+          status.textContent = "";
+          toast?.error?.(error instanceof Error ? error.message : "Save failed", {
+            key: "members-profile-privacy",
+            title: "Save failed",
+            autoDismissMs: 6800
+          });
         } finally {
           toggle.disabled = false;
         }

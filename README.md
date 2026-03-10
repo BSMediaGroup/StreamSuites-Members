@@ -70,6 +70,7 @@ StreamSuites-Members/
 |   |-- members-data.js
 |   |-- members-session.js
 |   |-- members-shell.js
+|   |-- members-toast.js
 |   |-- members-ui.js
 |   `-- profile-app.js
 |-- members/

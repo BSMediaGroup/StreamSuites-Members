@@ -298,6 +298,7 @@
   }
 
   function buildShareBox(url) {
+    const toast = window.StreamSuitesMembersToast;
     const box = create("div", "share-box");
     const text = create("code", "share-link-text", url);
     text.setAttribute("title", url);
@@ -307,6 +308,19 @@
     button.appendChild(createIcon(UI_ICON_MAP.copy));
     button.addEventListener("click", () => {
       copyTextToClipboard(url).then((copied) => {
+        if (copied) {
+          toast?.success?.("Share link copied.", {
+            key: "members-share-copy",
+            title: "Copied",
+            autoDismissMs: 2400
+          });
+        } else {
+          toast?.warning?.("Clipboard access was blocked in this browser context.", {
+            key: "members-share-copy",
+            title: "Copy unavailable",
+            autoDismissMs: 4200
+          });
+        }
         button.classList.toggle("is-copied", copied);
         button.innerHTML = "";
         button.appendChild(createIcon(copied ? UI_ICON_MAP.check : UI_ICON_MAP.copy));
