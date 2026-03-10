@@ -19,6 +19,7 @@
     "data",
     "favicon.ico",
     "js",
+    "live",
     "members",
     "notices",
     "settings",
@@ -91,6 +92,11 @@
     const slug = normalizeSlug(segments[0]);
     if (!slug || RESERVED_SEGMENTS.has(slug) || slug.includes(".")) return "";
     return slug;
+  }
+
+  function isLiveRoute() {
+    const pathname = String(window.location.pathname || "/").replace(/\/+$/, "") || "/";
+    return pathname === "/live";
   }
 
   function getInitials(name) {
@@ -291,6 +297,16 @@
     return profile.social_links.slice(0, 3).map((item) => toTitle(item.network));
   }
 
+  function buildLivePlatformSummary(profile) {
+    const items = [];
+    const liveStatus = getLiveStatus(profile);
+    if (liveStatus?.providerLabel) items.push(liveStatus.providerLabel);
+    getPrimaryPlatforms(profile).forEach((item) => {
+      if (!items.includes(item)) items.push(item);
+    });
+    return items.slice(0, 3);
+  }
+
   async function fetchJson(path) {
     const response = await fetch(buildAppUrl(path), { cache: "no-store" });
     if (!response.ok) throw new Error(`Request failed (${response.status})`);
@@ -399,6 +415,7 @@
   function matchesQuery(profile, query) {
     const needle = String(query || "").trim().toLowerCase();
     if (!needle) return true;
+    const liveStatus = getLiveStatus(profile);
     const haystack = [
       profile.display_name,
       profile.slug,
@@ -406,6 +423,8 @@
       profile.role,
       profile.account_type,
       profile.tier,
+      liveStatus?.providerLabel,
+      liveStatus?.title,
       ...profile.social_links.map((item) => `${item.network} ${item.url}`)
     ].join(" ").toLowerCase();
     return haystack.includes(needle);
@@ -417,6 +436,54 @@
       if (nameCompare !== 0) return nameCompare;
       return String(left.slug).localeCompare(String(right.slug));
     });
+  }
+
+  function sortLiveProfiles(profiles) {
+    return [...profiles].sort((left, right) => {
+      const leftLive = getLiveStatus(left);
+      const rightLive = getLiveStatus(right);
+      const leftViewers = leftLive?.viewerCount ?? -1;
+      const rightViewers = rightLive?.viewerCount ?? -1;
+      if (rightViewers !== leftViewers) return rightViewers - leftViewers;
+
+      const leftChecked = Date.parse(leftLive?.lastCheckedAt || "") || 0;
+      const rightChecked = Date.parse(rightLive?.lastCheckedAt || "") || 0;
+      if (rightChecked !== leftChecked) return rightChecked - leftChecked;
+
+      const leftStarted = Date.parse(leftLive?.startedAt || "") || 0;
+      const rightStarted = Date.parse(rightLive?.startedAt || "") || 0;
+      if (rightStarted !== leftStarted) return rightStarted - leftStarted;
+
+      return String(left.display_name || left.slug).localeCompare(String(right.display_name || right.slug));
+    });
+  }
+
+  function scoreLiveProfileIdentity(profile) {
+    const normalizedName = normalizeSlug(profile?.display_name || "");
+    const normalizedSlug = normalizeSlug(profile?.slug || "");
+    let score = 0;
+    if (normalizedName && normalizedSlug === normalizedName) score += 4;
+    if (profile?.streamsuites_profile_url) score += 2;
+    if (profile?.bio) score += 1;
+    if (Array.isArray(profile?.social_links) && profile.social_links.length) score += 1;
+    return score;
+  }
+
+  function dedupeLiveProfiles(profiles) {
+    const map = new Map();
+    profiles.forEach((profile) => {
+      const liveStatus = getLiveStatus(profile);
+      const key = [
+        String(profile?.display_name || "").trim().toLowerCase(),
+        String(liveStatus?.provider || "").trim().toLowerCase(),
+        String(liveStatus?.title || "").trim().toLowerCase()
+      ].join("|");
+      const existing = map.get(key);
+      if (!existing || scoreLiveProfileIdentity(profile) > scoreLiveProfileIdentity(existing)) {
+        map.set(key, profile);
+      }
+    });
+    return [...map.values()];
   }
 
   function buildTopbar() {
@@ -434,6 +501,8 @@
     );
 
     const actions = create("div", "fmh-topbar-actions");
+    const live = create("a", "fmh-link-button", "Live now");
+    live.href = "/live";
     const streamSuites = create("a", "fmh-link-button", "Open StreamSuites");
     streamSuites.href = STREAMSUITES_HOME;
     streamSuites.target = "_blank";
@@ -443,7 +512,7 @@
     creatorLogin.href = `${STREAMSUITES_HOME}/public-login.html`;
     creatorLogin.target = "_blank";
     creatorLogin.rel = "noopener noreferrer";
-    actions.append(streamSuites, creatorLogin);
+    actions.append(live, streamSuites, creatorLogin);
 
     bar.append(brand, actions);
     return bar;
@@ -461,11 +530,13 @@
     const actions = create("div", "fmh-hero-actions");
     const browse = create("a", "fmh-button fmh-button-primary", "Browse directory");
     browse.href = "#directory";
+    const live = create("a", "fmh-link-button", "See live now");
+    live.href = "/live";
     const setup = create("a", "fmh-link-button", "Set up your profile in StreamSuites");
     setup.href = STREAMSUITES_HOME;
     setup.target = "_blank";
     setup.rel = "noopener noreferrer";
-    actions.append(browse, setup);
+    actions.append(browse, live, setup);
     left.appendChild(actions);
 
     const right = create("div", "fmh-panel");
@@ -550,6 +621,78 @@
     const link = create("a", "fmh-link-button", "Open FindMeHere");
     link.href = `/${encodeURIComponent(profile.slug)}`;
     row.append(head, meta, share, link);
+    return row;
+  }
+
+  function buildLiveDirectoryCard(profile) {
+    const liveStatus = getLiveStatus(profile);
+    const card = create("article", "fmh-directory-card");
+    const eyebrow = create("div", "fmh-card-eyebrow");
+    eyebrow.append(create("span", "fmh-chip", "Live"), create("span", "fmh-card-url", toSharePath(profile).replace(/^https?:\/\//i, "")));
+
+    const head = create("div", "fmh-card-head");
+    const copy = create("div", "fmh-name-block");
+    const line = create("div", "fmh-name-line");
+    line.append(create("strong", "", profile.display_name), create("span", "fmh-handle", `@${profile.slug}`));
+    const liveBadge = buildLiveBadge(profile, true);
+    if (liveBadge) line.appendChild(liveBadge);
+    copy.append(line, create("p", "", liveStatus?.title || profile.bio || "FindMeHere live listing"));
+    head.append(buildAvatar(profile), copy);
+
+    const meta = create("div", "fmh-card-meta");
+    buildLivePlatformSummary(profile).forEach((item) => meta.appendChild(create("span", "", item)));
+    if (liveStatus?.viewerCount != null) meta.appendChild(create("span", "", `${liveStatus.viewerCount.toLocaleString()} watching`));
+
+    const footer = create("div", "fmh-card-footer");
+    const share = create("span", "fmh-card-share-note", liveStatus?.lastCheckedAt ? `Checked ${new Date(liveStatus.lastCheckedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "Authoritative live snapshot");
+    const actions = create("div", "fmh-live-actions");
+    const link = create("a", "fmh-button fmh-button-primary", "Open FindMeHere");
+    link.href = `/${encodeURIComponent(profile.slug)}`;
+    actions.appendChild(link);
+    if (liveStatus?.url) {
+      const watch = create("a", "fmh-link-button", "Watch stream");
+      watch.href = liveStatus.url;
+      watch.target = "_blank";
+      watch.rel = "noopener noreferrer";
+      actions.appendChild(watch);
+    }
+    footer.append(share, actions);
+    card.append(eyebrow, head, meta, footer);
+    return card;
+  }
+
+  function buildLiveDirectoryRow(profile) {
+    const liveStatus = getLiveStatus(profile);
+    const row = create("article", "fmh-directory-row");
+    const head = create("div", "fmh-row-head");
+    const copy = create("div", "fmh-row-copy");
+    const title = create("div", "fmh-name-line");
+    title.append(create("strong", "", profile.display_name), create("span", "fmh-handle", `@${profile.slug}`));
+    const liveBadge = buildLiveBadge(profile, true);
+    if (liveBadge) title.appendChild(liveBadge);
+    copy.append(title, create("p", "", liveStatus?.title || profile.bio || `Live on ${liveStatus?.providerLabel || "FindMeHere"}`));
+    head.append(buildAvatar(profile), copy);
+
+    const meta = create("div", "fmh-row-meta");
+    buildLivePlatformSummary(profile).forEach((item) => meta.appendChild(create("span", "", item)));
+    if (liveStatus?.viewerCount != null) meta.appendChild(create("span", "", `${liveStatus.viewerCount.toLocaleString()} watching`));
+
+    const share = create("div", "fmh-row-share");
+    share.append(create("span", "fmh-card-url", toSharePath(profile).replace(/^https?:\/\//i, "")));
+
+    const actions = create("div", "fmh-live-actions");
+    const link = create("a", "fmh-link-button", "Open FindMeHere");
+    link.href = `/${encodeURIComponent(profile.slug)}`;
+    actions.appendChild(link);
+    if (liveStatus?.url) {
+      const watch = create("a", "fmh-link-button", "Watch stream");
+      watch.href = liveStatus.url;
+      watch.target = "_blank";
+      watch.rel = "noopener noreferrer";
+      actions.appendChild(watch);
+    }
+
+    row.append(head, meta, share, actions);
     return row;
   }
 
@@ -686,6 +829,108 @@
       const results = create("div", "fmh-results");
       results.dataset.view = state.view;
       filtered.forEach((profile) => results.appendChild(state.view === "list" ? buildDirectoryRow(profile) : buildDirectoryCard(profile)));
+      section.appendChild(results);
+    }
+
+    shell.appendChild(section);
+    clear(root);
+    root.appendChild(shell);
+  }
+
+  function renderLiveDirectory(root, state) {
+    const liveProfiles = sortLiveProfiles(
+      dedupeLiveProfiles(state.profiles.filter((profile) => isEligibleProfile(profile) && getLiveStatus(profile)))
+    );
+    const filtered = liveProfiles.filter((profile) => matchesQuery(profile, state.query));
+
+    setMeta("FindMeHere Live | Creators live right now", "Browse creators who are currently live and eligible to appear on FindMeHere.");
+    setCanonical("/live");
+
+    const shell = create("div", "fmh-shell");
+    shell.appendChild(buildTopbar());
+
+    const hero = create("section", "fmh-hero");
+    const left = create("div", "fmh-panel fmh-hero-copy");
+    left.append(
+      create("span", "fmh-hero-kicker", "findmehere.live/live"),
+      create("h1", "", "Live creators, filtered for FindMeHere."),
+      create("p", "", "This view only shows creators who are live on the authoritative StreamSuites payload and still eligible to appear on the FindMeHere share surface.")
+    );
+    const heroActions = create("div", "fmh-hero-actions");
+    const backToDirectory = create("a", "fmh-button fmh-button-primary", "Browse directory");
+    backToDirectory.href = "/";
+    heroActions.appendChild(backToDirectory);
+    left.appendChild(heroActions);
+
+    const right = create("div", "fmh-panel");
+    const stats = create("div", "fmh-stat-grid");
+    [
+      { value: String(filtered.length), label: "Eligible live listings" },
+      { value: "Live only", label: "No offline profiles mixed in" },
+      { value: "Authoritative", label: "Centralized live payload" },
+      { value: "Share ready", label: "FindMeHere links first" }
+    ].forEach((item) => {
+      const card = create("div", "fmh-stat-card");
+      card.append(create("strong", "", item.value), create("span", "", item.label));
+      stats.appendChild(card);
+    });
+    right.appendChild(stats);
+    hero.append(left, right);
+    shell.appendChild(hero);
+
+    const section = create("section", "");
+    const toolbar = create("div", "fmh-directory-toolbar");
+    const title = create("div", "fmh-section-title");
+    title.append(create("span", "", "Live"), create("h2", "", "FindMeHere creators live right now"));
+    title.appendChild(create("p", "", filtered.length ? `${filtered.length} creator${filtered.length === 1 ? "" : "s"} currently live` : "No eligible FindMeHere creators are live right now."));
+    toolbar.appendChild(title);
+
+    const controls = create("div", "fmh-directory-controls");
+    const search = buildSearch(state.query, (nextQuery) => {
+      state.query = nextQuery;
+      renderLiveDirectory(root, state);
+    });
+    const searchActions = create("div", "fmh-search-actions");
+    if (state.query) {
+      const clearButton = create("button", "fmh-link-button", "Clear");
+      clearButton.type = "button";
+      clearButton.addEventListener("click", () => {
+        state.query = "";
+        renderLiveDirectory(root, state);
+      });
+      searchActions.appendChild(clearButton);
+    }
+    searchActions.appendChild(create("span", "fmh-search-hint", state.query ? `Filtering live creators for "${state.query}"` : "Search live names, slugs, titles, and providers"));
+    search.appendChild(searchActions);
+    controls.appendChild(search);
+
+    const actions = create("div", "fmh-directory-actions");
+    const viewToggle = create("div", "fmh-view-toggle");
+    [["gallery", "Gallery"], ["list", "List"]].forEach(([value, label]) => {
+      const button = create("button", state.view === value ? "is-active" : "", label);
+      button.type = "button";
+      button.addEventListener("click", () => {
+        state.view = value;
+        renderLiveDirectory(root, state);
+      });
+      viewToggle.appendChild(button);
+    });
+    actions.appendChild(viewToggle);
+    controls.appendChild(actions);
+    toolbar.appendChild(controls);
+    section.appendChild(toolbar);
+
+    if (!filtered.length) {
+      const empty = create("div", "fmh-empty");
+      empty.append(
+        create("h2", "", state.query ? "No live creators match that search." : "Nobody is live on FindMeHere right now."),
+        create("p", "", state.query ? "Try a different search or clear the filter to see all currently live eligible creators." : "Check back later or browse the full directory to discover creators before they go live.")
+      );
+      section.appendChild(empty);
+    } else {
+      const results = create("div", "fmh-results");
+      results.dataset.view = state.view;
+      filtered.forEach((profile) => results.appendChild(state.view === "list" ? buildLiveDirectoryRow(profile) : buildLiveDirectoryCard(profile)));
       section.appendChild(results);
     }
 
@@ -862,9 +1107,20 @@
     root.appendChild(create("div", "fmh-loading", "Loading FindMeHere"));
 
     const slug = getRouteSlug();
+    const liveRoute = isLiveRoute();
     const liveStatusMap = await fetchLiveStatusMap();
 
     try {
+      if (liveRoute) {
+        renderLiveDirectory(root, {
+          profiles: await loadDirectoryProfiles(liveStatusMap),
+          query: "",
+          letter: "all",
+          view: "gallery"
+        });
+        return;
+      }
+
       if (slug) {
         renderProfile(root, normalizePublicProfile(await fetchPublicProfile(slug), { slug }, liveStatusMap), slug);
         return;

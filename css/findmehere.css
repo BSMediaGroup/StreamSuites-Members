@@ -337,7 +337,8 @@ body.findmehere-page input {
 
 .fmh-card-eyebrow,
 .fmh-card-footer,
-.fmh-row-share {
+.fmh-row-share,
+.fmh-live-actions {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -742,7 +743,8 @@ body.findmehere-page input {
   .fmh-card-footer,
   .fmh-search-actions,
   .fmh-active-filters,
-  .fmh-row-share {
+  .fmh-row-share,
+  .fmh-live-actions {
     align-items: start;
     justify-content: start;
   }
