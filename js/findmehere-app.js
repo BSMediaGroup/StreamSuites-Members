@@ -577,10 +577,16 @@
 
     const actions = create("div", "fmh-topbar-actions");
     const themeToggle = create("button", "fmh-link-button fmh-theme-toggle");
+    const currentTheme = getActiveTheme();
+    const nextTheme = currentTheme === "light" ? "dark" : "light";
     themeToggle.type = "button";
     themeToggle.setAttribute("role", "switch");
     themeToggle.setAttribute("data-fmh-theme-toggle", "");
-    themeToggle.setAttribute("aria-checked", "false");
+    themeToggle.setAttribute("aria-checked", currentTheme === "light" ? "true" : "false");
+    themeToggle.setAttribute("aria-label", `Switch to ${nextTheme} mode`);
+    themeToggle.setAttribute("title", `Switch to ${nextTheme} mode`);
+    themeToggle.dataset.themeCurrent = currentTheme;
+    themeToggle.dataset.themeNext = nextTheme;
     const toggleTrack = create("span", "fmh-theme-toggle-track");
     toggleTrack.setAttribute("aria-hidden", "true");
     toggleTrack.append(
@@ -607,7 +613,6 @@
     creatorLogin.target = "_blank";
     creatorLogin.rel = "noopener noreferrer";
     actions.append(themeToggle, live, streamSuites, creatorLogin);
-    updateThemeControls(getActiveTheme());
 
     bar.append(brand, actions);
     return bar;
