@@ -1,0 +1,112 @@
+- generic [ref=e330]:
+  - banner [ref=e331]:
+    - link "FindMeHere FindMeHere Live Premium share-first creator pages" [ref=e332] [cursor=pointer]:
+      - /url: /
+      - img "FindMeHere" [ref=e333]
+      - generic [ref=e334]:
+        - strong [ref=e335]:
+          - generic [ref=e336]: FindMeHere
+          - generic [ref=e337]: Live
+        - generic [ref=e338]: Premium share-first creator pages
+    - generic [ref=e339]:
+      - switch "Switch to dark mode" [checked] [active] [ref=e433] [cursor=pointer]
+      - link "Live now" [ref=e346] [cursor=pointer]:
+        - /url: /live
+      - link "Open StreamSuites" [ref=e347] [cursor=pointer]:
+        - /url: https://streamsuites.app
+      - link "Creator Sign In" [ref=e348] [cursor=pointer]:
+        - /url: https://streamsuites.app/public-login.html
+  - main [ref=e349]:
+    - generic [ref=e350]:
+      - generic [ref=e351]:
+        - generic [ref=e352]: findmehere.live
+        - heading "Find your favourite creators live right now." [level=1] [ref=e353]
+        - paragraph [ref=e354]: "FindMeHere is the focused public surface for StreamSuites creators: clean profile discovery, direct share links, and a darker premium presentation that keeps the creator identity front and center."
+        - generic [ref=e355]:
+          - link "Browse directory" [ref=e356] [cursor=pointer]:
+            - /url: "#directory"
+          - link "See live now" [ref=e357] [cursor=pointer]:
+            - /url: /live
+          - link "Set up your profile in StreamSuites" [ref=e358] [cursor=pointer]:
+            - /url: https://streamsuites.app
+      - generic [ref=e360]:
+        - generic [ref=e361]:
+          - strong [ref=e362]: "12"
+          - text: Eligible FindMeHere profiles
+        - generic [ref=e363]:
+          - strong [ref=e364]: A-Z
+          - text: Quick alphabet filtering
+        - generic [ref=e365]:
+          - strong [ref=e366]: 2 views
+          - text: Gallery and list layouts
+        - generic [ref=e367]:
+          - strong [ref=e368]: Share first
+          - text: FindMeHere URL only
+    - generic [ref=e369]:
+      - generic [ref=e370]:
+        - generic [ref=e371]:
+          - text: Directory
+          - heading "Eligible FindMeHere profiles" [level=2] [ref=e372]
+          - paragraph [ref=e373]:
+            - generic [ref=e374]:
+              - strong [ref=e375]: "0"
+              - text: of 12 visible
+        - generic [ref=e376]:
+          - generic [ref=e377]:
+            - generic [ref=e378]:
+              - generic [ref=e379]: Search
+              - searchbox "Search" [ref=e380]: zzzzzzzzzz
+            - generic [ref=e381]:
+              - button "Clear" [ref=e382] [cursor=pointer]
+              - generic [ref=e383]: Filtering for "zzzzzzzzzz"
+          - generic [ref=e384]:
+            - generic [ref=e385]:
+              - button "Gallery" [ref=e386] [cursor=pointer]
+              - button "List" [ref=e387] [cursor=pointer]
+            - generic [ref=e388]:
+              - button "All" [ref=e389] [cursor=pointer]
+              - button "A" [ref=e390] [cursor=pointer]
+              - button "B" [ref=e391] [cursor=pointer]
+              - button "C" [ref=e392] [cursor=pointer]
+              - button "D" [ref=e393] [cursor=pointer]
+              - button "E" [ref=e394] [cursor=pointer]
+              - button "F" [ref=e395] [cursor=pointer]
+              - button "G" [ref=e396] [cursor=pointer]
+              - button "H" [ref=e397] [cursor=pointer]
+              - button "I" [ref=e398] [cursor=pointer]
+              - button "J" [ref=e399] [cursor=pointer]
+              - button "K" [ref=e400] [cursor=pointer]
+              - button "L" [ref=e401] [cursor=pointer]
+              - button "M" [ref=e402] [cursor=pointer]
+              - button "N" [ref=e403] [cursor=pointer]
+              - button "O" [ref=e404] [cursor=pointer]
+              - button "P" [ref=e405] [cursor=pointer]
+              - button "Q" [ref=e406] [cursor=pointer]
+              - button "R" [ref=e407] [cursor=pointer]
+              - button "S" [ref=e408] [cursor=pointer]
+              - button "T" [ref=e409] [cursor=pointer]
+              - button "U" [ref=e410] [cursor=pointer]
+              - button "V" [ref=e411] [cursor=pointer]
+              - button "W" [ref=e412] [cursor=pointer]
+              - button "X" [ref=e413] [cursor=pointer]
+              - button "Y" [ref=e414] [cursor=pointer]
+              - button "Z" [ref=e415] [cursor=pointer]
+      - generic [ref=e416]:
+        - generic [ref=e417]: Gallery view
+        - generic [ref=e418]: "Search: zzzzzzzzzz"
+        - button "Reset filters" [ref=e419] [cursor=pointer]
+      - generic [ref=e420]:
+        - heading "No FindMeHere listings match that search." [level=2] [ref=e421]
+        - paragraph [ref=e422]: Try another name, clear the search, or switch back to the All alphabet filter to browse the full directory.
+  - contentinfo [ref=e423]:
+    - generic [ref=e424]:
+      - generic [ref=e426]:
+        - link "Directory" [ref=e427] [cursor=pointer]:
+          - /url: /
+        - link "Live" [ref=e428] [cursor=pointer]:
+          - /url: /live
+        - link "StreamSuites" [ref=e429] [cursor=pointer]:
+          - /url: https://streamsuites.app
+      - generic [ref=e430]:
+        - generic [ref=e431]: FindMeHere public directory
+        - generic [ref=e432]: Powered by StreamSuites

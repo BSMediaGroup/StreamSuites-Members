@@ -72,17 +72,11 @@
   function updateThemeControls(theme) {
     const nextTheme = theme === "light" ? "dark" : "light";
     document.querySelectorAll("[data-fmh-theme-toggle]").forEach((button) => {
-      button.setAttribute("aria-pressed", theme === "light" ? "true" : "false");
+      button.setAttribute("aria-checked", theme === "light" ? "true" : "false");
       button.setAttribute("aria-label", `Switch to ${nextTheme} mode`);
       button.setAttribute("title", `Switch to ${nextTheme} mode`);
       button.dataset.themeCurrent = theme;
       button.dataset.themeNext = nextTheme;
-
-      const label = button.querySelector("[data-fmh-theme-label]");
-      if (label) label.textContent = nextTheme === "light" ? "Light mode" : "Dark mode";
-
-      const current = button.querySelector("[data-fmh-theme-current]");
-      if (current) current.textContent = theme === "light" ? "Light" : "Dark";
     });
   }
 
@@ -100,6 +94,14 @@
 
   function toggleTheme() {
     return applyTheme(getActiveTheme() === "light" ? "dark" : "light", true);
+  }
+
+  function buildShellFrame() {
+    const shell = create("div", "fmh-shell");
+    const main = create("main", "fmh-main");
+    main.setAttribute("data-fmh-main", "");
+    shell.append(buildTopbar(), main, buildFooter());
+    return { shell, main };
   }
 
   function setMeta(title, description) {
@@ -576,20 +578,21 @@
     const actions = create("div", "fmh-topbar-actions");
     const themeToggle = create("button", "fmh-link-button fmh-theme-toggle");
     themeToggle.type = "button";
+    themeToggle.setAttribute("role", "switch");
     themeToggle.setAttribute("data-fmh-theme-toggle", "");
-    themeToggle.append(
-      create("span", "fmh-theme-toggle-indicator"),
+    themeToggle.setAttribute("aria-checked", "false");
+    const toggleTrack = create("span", "fmh-theme-toggle-track");
+    toggleTrack.setAttribute("aria-hidden", "true");
+    toggleTrack.append(
+      create("span", "fmh-theme-toggle-icon fmh-theme-toggle-icon-sun"),
+      create("span", "fmh-theme-toggle-icon fmh-theme-toggle-icon-moon"),
       (() => {
-        const copyWrap = create("span", "fmh-theme-toggle-copy");
-        copyWrap.append(
-          create("span", "fmh-theme-toggle-label", "Light mode"),
-          create("span", "fmh-theme-toggle-current", "Dark")
-        );
-        copyWrap.firstChild.setAttribute("data-fmh-theme-label", "");
-        copyWrap.lastChild.setAttribute("data-fmh-theme-current", "");
-        return copyWrap;
+        const thumb = create("span", "fmh-theme-toggle-thumb");
+        thumb.appendChild(create("span", "fmh-theme-toggle-thumb-core"));
+        return thumb;
       })()
     );
+    themeToggle.appendChild(toggleTrack);
     themeToggle.addEventListener("click", toggleTheme);
 
     const live = create("a", "fmh-link-button", "Live now");
@@ -828,8 +831,7 @@
     setMeta("Profile unavailable | FindMeHere", "This FindMeHere route is unavailable because the profile is not listed or cannot be shown on FindMeHere.");
     setCanonical(slug ? `/${encodeURIComponent(slug)}` : "/");
 
-    const shell = create("div", "fmh-shell");
-    shell.appendChild(buildTopbar());
+    const { shell, main } = buildShellFrame();
 
     const route = create("section", "fmh-profile-route");
     const card = create("div", "fmh-panel fmh-unavailable-card");
@@ -850,8 +852,7 @@
     actions.append(home, streamSuites);
     card.appendChild(actions);
     route.appendChild(card);
-    shell.appendChild(route);
-    shell.appendChild(buildFooter());
+    main.appendChild(route);
     return shell;
   }
 
@@ -863,9 +864,8 @@
     setCanonical("/");
     updateDirectoryStateUrl(state);
 
-    const shell = create("div", "fmh-shell");
-    shell.appendChild(buildTopbar());
-    shell.appendChild(buildHero(eligibleProfiles.length));
+    const { shell, main } = buildShellFrame();
+    main.appendChild(buildHero(eligibleProfiles.length));
 
     const section = create("section", "");
     section.id = "directory";
@@ -961,8 +961,7 @@
       section.appendChild(results);
     }
 
-    shell.appendChild(section);
-    shell.appendChild(buildFooter());
+    main.appendChild(section);
     clear(root);
     root.appendChild(shell);
   }
@@ -976,8 +975,7 @@
     setMeta("FindMeHere Live | Creators live right now", "Browse creators who are currently live and eligible to appear on FindMeHere.");
     setCanonical("/live");
 
-    const shell = create("div", "fmh-shell");
-    shell.appendChild(buildTopbar());
+    const { shell, main } = buildShellFrame();
 
     const hero = create("section", "fmh-hero");
     const left = create("div", "fmh-panel fmh-hero-copy");
@@ -1006,7 +1004,7 @@
     });
     right.appendChild(stats);
     hero.append(left, right);
-    shell.appendChild(hero);
+    main.appendChild(hero);
 
     const section = create("section", "");
     const toolbar = create("div", "fmh-directory-toolbar");
@@ -1064,8 +1062,7 @@
       section.appendChild(results);
     }
 
-    shell.appendChild(section);
-    shell.appendChild(buildFooter());
+    main.appendChild(section);
     clear(root);
     root.appendChild(shell);
   }
@@ -1094,8 +1091,7 @@
     setMeta(`${profile.display_name} on FindMeHere`, profile.bio || `Open ${profile.display_name}'s FindMeHere share page on findmehere.live.`);
     setCanonical(`/${encodeURIComponent(profile.slug)}`);
 
-    const shell = create("div", "fmh-shell");
-    shell.appendChild(buildTopbar());
+    const { shell, main } = buildShellFrame();
 
     const route = create("section", "fmh-profile-route");
     const hero = create("article", "fmh-profile-hero");
@@ -1214,8 +1210,7 @@
     grid.append(left, right);
     route.appendChild(grid);
 
-    shell.appendChild(route);
-    shell.appendChild(buildFooter());
+    main.appendChild(route);
     clear(root);
     root.appendChild(shell);
   }

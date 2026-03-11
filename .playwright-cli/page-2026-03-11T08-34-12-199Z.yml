@@ -1,0 +1,327 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - link "FindMeHere FindMeHere Live Premium share-first creator pages" [ref=e5] [cursor=pointer]:
+      - /url: /
+      - img "FindMeHere" [ref=e6]
+      - generic [ref=e7]:
+        - strong [ref=e8]:
+          - generic [ref=e9]: FindMeHere
+          - generic [ref=e10]: Live
+        - generic [ref=e11]: Premium share-first creator pages
+    - generic [ref=e12]:
+      - switch [ref=e13] [cursor=pointer]
+      - link "Live now" [ref=e19] [cursor=pointer]:
+        - /url: /live
+      - link "Open StreamSuites" [ref=e20] [cursor=pointer]:
+        - /url: https://streamsuites.app
+      - link "Creator Sign In" [ref=e21] [cursor=pointer]:
+        - /url: https://streamsuites.app/public-login.html
+  - main [ref=e22]:
+    - generic [ref=e23]:
+      - generic [ref=e24]:
+        - generic [ref=e25]: findmehere.live
+        - heading "Find your favourite creators live right now." [level=1] [ref=e26]
+        - paragraph [ref=e27]: "FindMeHere is the focused public surface for StreamSuites creators: clean profile discovery, direct share links, and a darker premium presentation that keeps the creator identity front and center."
+        - generic [ref=e28]:
+          - link "Browse directory" [ref=e29] [cursor=pointer]:
+            - /url: "#directory"
+          - link "See live now" [ref=e30] [cursor=pointer]:
+            - /url: /live
+          - link "Set up your profile in StreamSuites" [ref=e31] [cursor=pointer]:
+            - /url: https://streamsuites.app
+      - generic [ref=e33]:
+        - generic [ref=e34]:
+          - strong [ref=e35]: "12"
+          - text: Eligible FindMeHere profiles
+        - generic [ref=e36]:
+          - strong [ref=e37]: A-Z
+          - text: Quick alphabet filtering
+        - generic [ref=e38]:
+          - strong [ref=e39]: 2 views
+          - text: Gallery and list layouts
+        - generic [ref=e40]:
+          - strong [ref=e41]: Share first
+          - text: FindMeHere URL only
+    - generic [ref=e42]:
+      - generic [ref=e43]:
+        - generic [ref=e44]:
+          - text: Directory
+          - heading "Eligible FindMeHere profiles" [level=2] [ref=e45]
+          - paragraph [ref=e46]:
+            - generic [ref=e47]:
+              - strong [ref=e48]: "12"
+              - text: of 12 visible
+        - generic [ref=e49]:
+          - generic [ref=e50]:
+            - generic [ref=e51]:
+              - generic [ref=e52]: Search
+              - searchbox "Search" [ref=e53]
+            - generic [ref=e55]: Search names, slugs, bios, and primary platforms
+          - generic [ref=e56]:
+            - generic [ref=e57]:
+              - button "Gallery" [ref=e58] [cursor=pointer]
+              - button "List" [ref=e59] [cursor=pointer]
+            - generic [ref=e60]:
+              - button "All" [ref=e61] [cursor=pointer]
+              - button "A" [ref=e62] [cursor=pointer]
+              - button "B" [ref=e63] [cursor=pointer]
+              - button "C" [ref=e64] [cursor=pointer]
+              - button "D" [ref=e65] [cursor=pointer]
+              - button "E" [ref=e66] [cursor=pointer]
+              - button "F" [ref=e67] [cursor=pointer]
+              - button "G" [ref=e68] [cursor=pointer]
+              - button "H" [ref=e69] [cursor=pointer]
+              - button "I" [ref=e70] [cursor=pointer]
+              - button "J" [ref=e71] [cursor=pointer]
+              - button "K" [ref=e72] [cursor=pointer]
+              - button "L" [ref=e73] [cursor=pointer]
+              - button "M" [ref=e74] [cursor=pointer]
+              - button "N" [ref=e75] [cursor=pointer]
+              - button "O" [ref=e76] [cursor=pointer]
+              - button "P" [ref=e77] [cursor=pointer]
+              - button "Q" [ref=e78] [cursor=pointer]
+              - button "R" [ref=e79] [cursor=pointer]
+              - button "S" [ref=e80] [cursor=pointer]
+              - button "T" [ref=e81] [cursor=pointer]
+              - button "U" [ref=e82] [cursor=pointer]
+              - button "V" [ref=e83] [cursor=pointer]
+              - button "W" [ref=e84] [cursor=pointer]
+              - button "X" [ref=e85] [cursor=pointer]
+              - button "Y" [ref=e86] [cursor=pointer]
+              - button "Z" [ref=e87] [cursor=pointer]
+      - generic [ref=e89]: Gallery view
+      - generic [ref=e90]:
+        - article [ref=e91]:
+          - generic [ref=e92]:
+            - generic [ref=e93]: FindMeHere
+            - generic [ref=e94]: findmehere.live/redmandolin2
+          - generic [ref=e95]:
+            - img "♦️ Red Mandolin ♦️ avatar" [ref=e97]
+            - generic [ref=e98]:
+              - generic [ref=e99]:
+                - strong [ref=e101]: ♦️ Red Mandolin ♦️
+                - generic [ref=e102]: "@redmandolin2"
+              - paragraph [ref=e103]: FindMeHere share page
+          - generic [ref=e104]:
+            - generic [ref=e105]: Creator
+            - generic [ref=e106]: CORE
+          - generic [ref=e107]:
+            - generic [ref=e108]: Share-ready page
+            - link "Open FindMeHere" [ref=e109] [cursor=pointer]:
+              - /url: /redmandolin2
+        - article [ref=e110]:
+          - generic [ref=e111]:
+            - generic [ref=e112]: FindMeHere
+            - generic [ref=e113]: findmehere.live/bsmediagroup
+          - generic [ref=e114]:
+            - generic [ref=e115]: B
+            - generic [ref=e116]:
+              - generic [ref=e117]:
+                - strong [ref=e119]: BSMediaGroup
+                - generic [ref=e120]: "@bsmediagroup"
+              - paragraph [ref=e121]: FindMeHere share page
+          - generic [ref=e122]:
+            - generic [ref=e123]: Admin
+            - generic [ref=e124]: PRO
+          - generic [ref=e125]:
+            - generic [ref=e126]: Share-ready page
+            - link "Open FindMeHere" [ref=e127] [cursor=pointer]:
+              - /url: /bsmediagroup
+        - article [ref=e128]:
+          - generic [ref=e129]:
+            - generic [ref=e130]: FindMeHere
+            - generic [ref=e131]: findmehere.live/danielclancy
+          - generic [ref=e132]:
+            - img "Daniel Clancy avatar" [ref=e134]
+            - generic [ref=e135]:
+              - generic [ref=e136]:
+                - generic [ref=e137]:
+                  - strong [ref=e138]: Daniel Clancy
+                  - generic "Twitch live now" [ref=e139]: LIVE
+                - generic [ref=e140]: "@danielclancy"
+              - paragraph [ref=e141]: FindMeHere share page
+          - generic [ref=e142]:
+            - generic [ref=e143]: Admin
+            - generic [ref=e144]: PRO
+          - generic [ref=e145]:
+            - generic [ref=e146]: Share-ready page
+            - link "Open FindMeHere" [ref=e147] [cursor=pointer]:
+              - /url: /danielclancy
+        - article [ref=e148]:
+          - generic [ref=e149]:
+            - generic [ref=e150]: FindMeHere
+            - generic [ref=e151]: findmehere.live/danielclancy2
+          - generic [ref=e152]:
+            - img "Daniel Clancy avatar" [ref=e154]
+            - generic [ref=e155]:
+              - generic [ref=e156]:
+                - generic [ref=e157]:
+                  - strong [ref=e158]: Daniel Clancy
+                  - generic "Twitch live now" [ref=e159]: LIVE
+                - generic [ref=e160]: "@danielclancy2"
+              - paragraph [ref=e161]: FindMeHere share page
+          - generic [ref=e162]:
+            - generic [ref=e163]: Admin
+            - generic [ref=e164]: PRO
+          - generic [ref=e165]:
+            - generic [ref=e166]: Share-ready page
+            - link "Open FindMeHere" [ref=e167] [cursor=pointer]:
+              - /url: /danielclancy2
+        - article [ref=e168]:
+          - generic [ref=e169]:
+            - generic [ref=e170]: FindMeHere
+            - generic [ref=e171]: findmehere.live/danielclancy3
+          - generic [ref=e172]:
+            - img "Daniel Clancy avatar" [ref=e174]
+            - generic [ref=e175]:
+              - generic [ref=e176]:
+                - generic [ref=e177]:
+                  - strong [ref=e178]: Daniel Clancy
+                  - generic "Twitch live now" [ref=e179]: LIVE
+                - generic [ref=e180]: "@danielclancy3"
+              - paragraph [ref=e181]: FindMeHere share page
+          - generic [ref=e182]:
+            - generic [ref=e183]: Creator
+            - generic [ref=e184]: CORE
+          - generic [ref=e185]:
+            - generic [ref=e186]: Share-ready page
+            - link "Open FindMeHere" [ref=e187] [cursor=pointer]:
+              - /url: /danielclancy3
+        - article [ref=e188]:
+          - generic [ref=e189]:
+            - generic [ref=e190]: FindMeHere
+            - generic [ref=e191]: findmehere.live/danielclancylive
+          - generic [ref=e192]:
+            - img "DanielClancyLive avatar" [ref=e194]
+            - generic [ref=e195]:
+              - generic [ref=e196]:
+                - strong [ref=e198]: DanielClancyLive
+                - generic [ref=e199]: "@danielclancylive"
+              - paragraph [ref=e200]: FindMeHere share page
+          - generic [ref=e201]:
+            - generic [ref=e202]: Creator
+            - generic [ref=e203]: CORE
+          - generic [ref=e204]:
+            - generic [ref=e205]: Share-ready page
+            - link "Open FindMeHere" [ref=e206] [cursor=pointer]:
+              - /url: /danielclancylive
+        - article [ref=e207]:
+          - generic [ref=e208]:
+            - generic [ref=e209]: FindMeHere
+            - generic [ref=e210]: findmehere.live/digitalcyanide
+          - generic [ref=e211]:
+            - img "Digital Cyanide avatar" [ref=e213]
+            - generic [ref=e214]:
+              - generic [ref=e215]:
+                - strong [ref=e217]: Digital Cyanide
+                - generic [ref=e218]: "@digitalcyanide"
+              - paragraph [ref=e219]: FindMeHere share page
+          - generic [ref=e220]:
+            - generic [ref=e221]: Creator
+            - generic [ref=e222]: CORE
+          - generic [ref=e223]:
+            - generic [ref=e224]: Share-ready page
+            - link "Open FindMeHere" [ref=e225] [cursor=pointer]:
+              - /url: /digitalcyanide
+        - article [ref=e226]:
+          - generic [ref=e227]:
+            - generic [ref=e228]: FindMeHere
+            - generic [ref=e229]: findmehere.live/jacksonjones
+          - generic [ref=e230]:
+            - img "Jackson Jones avatar" [ref=e232]
+            - generic [ref=e233]:
+              - generic [ref=e234]:
+                - strong [ref=e236]: Jackson Jones
+                - generic [ref=e237]: "@jacksonjones"
+              - paragraph [ref=e238]: FindMeHere share page
+          - generic [ref=e239]:
+            - generic [ref=e240]: Public
+            - generic [ref=e241]: CORE
+          - generic [ref=e242]:
+            - generic [ref=e243]: Share-ready page
+            - link "Open FindMeHere" [ref=e244] [cursor=pointer]:
+              - /url: /jacksonjones
+        - article [ref=e245]:
+          - generic [ref=e246]:
+            - generic [ref=e247]: FindMeHere
+            - generic [ref=e248]: findmehere.live/jarredpluschke
+          - generic [ref=e249]:
+            - img "Jarred Pluschke avatar" [ref=e251]
+            - generic [ref=e252]:
+              - generic [ref=e253]:
+                - strong [ref=e255]: Jarred Pluschke
+                - generic [ref=e256]: "@jarredpluschke"
+              - paragraph [ref=e257]: FindMeHere share page
+          - generic [ref=e258]:
+            - generic [ref=e259]: Creator
+            - generic [ref=e260]: GOLD
+          - generic [ref=e261]:
+            - generic [ref=e262]: Share-ready page
+            - link "Open FindMeHere" [ref=e263] [cursor=pointer]:
+              - /url: /jarredpluschke
+        - article [ref=e264]:
+          - generic [ref=e265]:
+            - generic [ref=e266]: FindMeHere
+            - generic [ref=e267]: findmehere.live/kanefort89
+          - generic [ref=e268]:
+            - img "kanefort89 avatar" [ref=e270]
+            - generic [ref=e271]:
+              - generic [ref=e272]:
+                - strong [ref=e274]: kanefort89
+                - generic [ref=e275]: "@kanefort89"
+              - paragraph [ref=e276]: FindMeHere share page
+          - generic [ref=e277]:
+            - generic [ref=e278]: Creator
+            - generic [ref=e279]: PRO
+          - generic [ref=e280]:
+            - generic [ref=e281]: Share-ready page
+            - link "Open FindMeHere" [ref=e282] [cursor=pointer]:
+              - /url: /kanefort89
+        - article [ref=e283]:
+          - generic [ref=e284]:
+            - generic [ref=e285]: FindMeHere
+            - generic [ref=e286]: findmehere.live/redmandolin
+          - generic [ref=e287]:
+            - img "Red Mandolin avatar" [ref=e289]
+            - generic [ref=e290]:
+              - generic [ref=e291]:
+                - strong [ref=e293]: Red Mandolin
+                - generic [ref=e294]: "@redmandolin"
+              - paragraph [ref=e295]: FindMeHere share page
+          - generic [ref=e296]:
+            - generic [ref=e297]: Creator
+            - generic [ref=e298]: CORE
+          - generic [ref=e299]:
+            - generic [ref=e300]: Share-ready page
+            - link "Open FindMeHere" [ref=e301] [cursor=pointer]:
+              - /url: /redmandolin
+        - article [ref=e302]:
+          - generic [ref=e303]:
+            - generic [ref=e304]: FindMeHere
+            - generic [ref=e305]: findmehere.live/thirdrailify
+          - generic [ref=e306]:
+            - generic [ref=e307]: TR
+            - generic [ref=e308]:
+              - generic [ref=e309]:
+                - strong [ref=e311]: Third Railify
+                - generic [ref=e312]: "@thirdrailify"
+              - paragraph [ref=e313]: FindMeHere share page
+          - generic [ref=e314]:
+            - generic [ref=e315]: Creator
+            - generic [ref=e316]: CORE
+          - generic [ref=e317]:
+            - generic [ref=e318]: Share-ready page
+            - link "Open FindMeHere" [ref=e319] [cursor=pointer]:
+              - /url: /thirdrailify
+  - contentinfo [ref=e320]:
+    - generic [ref=e321]:
+      - generic [ref=e323]:
+        - link "Directory" [ref=e324] [cursor=pointer]:
+          - /url: /
+        - link "Live" [ref=e325] [cursor=pointer]:
+          - /url: /live
+        - link "StreamSuites" [ref=e326] [cursor=pointer]:
+          - /url: https://streamsuites.app
+      - generic [ref=e327]:
+        - generic [ref=e328]: FindMeHere public directory
+        - generic [ref=e329]: Powered by StreamSuites
