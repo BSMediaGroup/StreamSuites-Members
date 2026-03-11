@@ -4,6 +4,8 @@
   const PUBLIC_PROFILE_ENDPOINT = "/api/public/profile";
   const STREAMSUITES_HOME = "https://streamsuites.app";
   const FINDMEHERE_HOME = "https://findmehere.live";
+  const THEME_STORAGE_KEY = "fmh-theme";
+  const DEFAULT_THEME = "dark";
   const FALLBACK_COVER = "/assets/placeholders/defaultprofilecover.webp";
   const FMH_WORDMARK_BLOCK_LOGO = "/assets/logos/fmhwordmarkblockx.webp";
   const FMH_ICON_LOGO = "/assets/logos/fmhlogo.png";
@@ -37,6 +39,67 @@
 
   function clear(node) {
     while (node.firstChild) node.removeChild(node.firstChild);
+  }
+
+  function normalizeTheme(value) {
+    return value === "light" ? "light" : DEFAULT_THEME;
+  }
+
+  function readStoredTheme() {
+    try {
+      return normalizeTheme(window.localStorage.getItem(THEME_STORAGE_KEY));
+    } catch (_error) {
+      return DEFAULT_THEME;
+    }
+  }
+
+  function writeStoredTheme(theme) {
+    try {
+      window.localStorage.setItem(THEME_STORAGE_KEY, normalizeTheme(theme));
+    } catch (_error) {
+      // Ignore storage failures.
+    }
+  }
+
+  function getActiveTheme() {
+    return normalizeTheme(
+      document.documentElement.getAttribute("data-fmh-theme") ||
+      document.body?.getAttribute("data-fmh-theme") ||
+      readStoredTheme()
+    );
+  }
+
+  function updateThemeControls(theme) {
+    const nextTheme = theme === "light" ? "dark" : "light";
+    document.querySelectorAll("[data-fmh-theme-toggle]").forEach((button) => {
+      button.setAttribute("aria-pressed", theme === "light" ? "true" : "false");
+      button.setAttribute("aria-label", `Switch to ${nextTheme} mode`);
+      button.setAttribute("title", `Switch to ${nextTheme} mode`);
+      button.dataset.themeCurrent = theme;
+      button.dataset.themeNext = nextTheme;
+
+      const label = button.querySelector("[data-fmh-theme-label]");
+      if (label) label.textContent = nextTheme === "light" ? "Light mode" : "Dark mode";
+
+      const current = button.querySelector("[data-fmh-theme-current]");
+      if (current) current.textContent = theme === "light" ? "Light" : "Dark";
+    });
+  }
+
+  function applyTheme(theme, persist = false) {
+    const nextTheme = normalizeTheme(theme);
+    document.documentElement.setAttribute("data-fmh-theme", nextTheme);
+    document.documentElement.style.colorScheme = nextTheme;
+    if (document.body) {
+      document.body.setAttribute("data-fmh-theme", nextTheme);
+    }
+    if (persist) writeStoredTheme(nextTheme);
+    updateThemeControls(nextTheme);
+    return nextTheme;
+  }
+
+  function toggleTheme() {
+    return applyTheme(getActiveTheme() === "light" ? "dark" : "light", true);
   }
 
   function setMeta(title, description) {
@@ -511,6 +574,24 @@
     brand.append(brandWordmark, brandIcon, copy);
 
     const actions = create("div", "fmh-topbar-actions");
+    const themeToggle = create("button", "fmh-link-button fmh-theme-toggle");
+    themeToggle.type = "button";
+    themeToggle.setAttribute("data-fmh-theme-toggle", "");
+    themeToggle.append(
+      create("span", "fmh-theme-toggle-indicator"),
+      (() => {
+        const copyWrap = create("span", "fmh-theme-toggle-copy");
+        copyWrap.append(
+          create("span", "fmh-theme-toggle-label", "Light mode"),
+          create("span", "fmh-theme-toggle-current", "Dark")
+        );
+        copyWrap.firstChild.setAttribute("data-fmh-theme-label", "");
+        copyWrap.lastChild.setAttribute("data-fmh-theme-current", "");
+        return copyWrap;
+      })()
+    );
+    themeToggle.addEventListener("click", toggleTheme);
+
     const live = create("a", "fmh-link-button", "Live now");
     live.href = "/live";
     const streamSuites = create("a", "fmh-link-button", "Open StreamSuites");
@@ -522,7 +603,8 @@
     creatorLogin.href = `${STREAMSUITES_HOME}/public-login.html`;
     creatorLogin.target = "_blank";
     creatorLogin.rel = "noopener noreferrer";
-    actions.append(live, streamSuites, creatorLogin);
+    actions.append(themeToggle, live, streamSuites, creatorLogin);
+    updateThemeControls(getActiveTheme());
 
     bar.append(brand, actions);
     return bar;
@@ -1152,6 +1234,8 @@
   async function init() {
     const root = document.getElementById("app");
     if (!root) return;
+
+    applyTheme(readStoredTheme());
 
     clear(root);
     root.appendChild(create("div", "fmh-loading", "Loading FindMeHere"));

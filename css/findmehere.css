@@ -1,4 +1,5 @@
-:root {
+:root,
+html[data-fmh-theme="dark"] {
   --fmh-bg: #050608;
   --fmh-bg-alt: #0b0d10;
   --fmh-bg-elevated: #111418;
@@ -20,6 +21,228 @@
   --fmh-radius-lg: 20px;
   --fmh-radius-md: 14px;
   --fmh-max: 1400px;
+  --fmh-page-bg:
+    radial-gradient(880px 420px at 18% -4%, rgba(218, 225, 237, 0.08), transparent 68%),
+    radial-gradient(720px 420px at 100% 8%, rgba(178, 31, 45, 0.16), transparent 64%),
+    radial-gradient(640px 360px at 50% 100%, rgba(255, 255, 255, 0.035), transparent 70%),
+    linear-gradient(180deg, #07080a 0%, #0a0c10 34%, #040507 100%);
+  --fmh-grid:
+    linear-gradient(rgba(230, 236, 244, 0.5) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(230, 236, 244, 0.45) 1px, transparent 1px);
+  --fmh-grid-opacity: 0.055;
+  --fmh-grid-opacity-mobile: 0.045;
+  --fmh-grid-mask: linear-gradient(180deg, rgba(0, 0, 0, 0.56), rgba(0, 0, 0, 0.14) 38%, transparent 92%);
+  --fmh-page-overlay:
+    radial-gradient(540px 220px at 50% 0%, rgba(255, 255, 255, 0.06), transparent 70%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.28) 65%, rgba(0, 0, 0, 0.62) 100%);
+  --fmh-topbar-bg:
+    linear-gradient(180deg, rgba(244, 246, 250, 0.065), rgba(244, 246, 250, 0)),
+    linear-gradient(160deg, rgba(21, 23, 29, 0.94), rgba(8, 9, 12, 0.96));
+  --fmh-topbar-shadow: 0 10px 32px rgba(0, 0, 0, 0.32);
+  --fmh-brand-shadow: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.45));
+  --fmh-control-bg:
+    linear-gradient(180deg, rgba(242, 245, 250, 0.06), rgba(242, 245, 250, 0)),
+    rgba(255, 255, 255, 0.03);
+  --fmh-control-hover-bg:
+    linear-gradient(180deg, rgba(223, 61, 75, 0.15), rgba(223, 61, 75, 0.04)),
+    rgba(255, 255, 255, 0.035);
+  --fmh-control-hover-border: rgba(223, 61, 75, 0.46);
+  --fmh-control-hover-color: #fff8f9;
+  --fmh-control-hover-shadow: 0 10px 22px rgba(0, 0, 0, 0.24);
+  --fmh-button-primary-color: #fff4f5;
+  --fmh-button-primary-border: rgba(226, 79, 94, 0.62);
+  --fmh-button-primary-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0)),
+    linear-gradient(135deg, #5f0d16 0%, #a81928 48%, #d63a48 100%);
+  --fmh-button-primary-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 18px 34px rgba(96, 10, 19, 0.34);
+  --fmh-panel-highlight: linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 22%);
+  --fmh-stat-border: rgba(216, 224, 236, 0.11);
+  --fmh-stat-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0)),
+    rgba(255, 255, 255, 0.02);
+  --fmh-input-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0)),
+    rgba(7, 8, 11, 0.82);
+  --fmh-placeholder: #848b97;
+  --fmh-card-border: rgba(214, 221, 233, 0.1);
+  --fmh-avatar-text: #0f1115;
+  --fmh-avatar-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0)),
+    linear-gradient(145deg, #f1f4f8 0%, #b9c0ca 48%, #727985 100%);
+  --fmh-avatar-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  --fmh-avatar-live-ring: 0 0 0 3px rgba(178, 31, 45, 0.18);
+  --fmh-avatar-live-pulse: rgba(223, 61, 75, 0.72);
+  --fmh-chip-text: #f0f3f8;
+  --fmh-chip-border: rgba(219, 226, 237, 0.18);
+  --fmh-chip-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0)),
+    rgba(255, 255, 255, 0.035);
+  --fmh-meta-border: rgba(218, 225, 236, 0.11);
+  --fmh-meta-bg: rgba(255, 255, 255, 0.03);
+  --fmh-meta-text: #d1d7e1;
+  --fmh-profile-cover-bg:
+    radial-gradient(520px 240px at 50% 0%, rgba(255, 255, 255, 0.08), transparent 65%),
+    linear-gradient(180deg, #16191e 0%, #0d1014 100%);
+  --fmh-live-badge-border: rgba(225, 72, 87, 0.5);
+  --fmh-live-badge-bg: linear-gradient(180deg, rgba(211, 44, 58, 0.28), rgba(84, 10, 17, 0.92));
+  --fmh-live-badge-text: #fff3f4;
+  --fmh-live-banner-border: rgba(228, 83, 98, 0.2);
+  --fmh-live-banner-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)),
+    linear-gradient(180deg, rgba(99, 11, 22, 0.52), rgba(19, 10, 13, 0.94));
+  --fmh-live-summary-text: #ffe0e3;
+  --fmh-live-title-text: #fff4f5;
+  --fmh-live-link-text: #ffdfe2;
+  --fmh-live-link-hover: #ffffff;
+  --fmh-share-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)),
+    rgba(178, 31, 45, 0.08);
+  --fmh-share-border: rgba(228, 79, 94, 0.2);
+  --fmh-share-url-bg: rgba(7, 8, 10, 0.76);
+  --fmh-share-url-text: #f3f6fb;
+  --fmh-copy-copied-color: #fff8f9;
+  --fmh-copy-copied-bg: linear-gradient(135deg, #7d151f, #c52e3c);
+  --fmh-destination-bg: rgba(255, 255, 255, 0.025);
+  --fmh-destination-border: rgba(220, 227, 238, 0.08);
+  --fmh-placeholder-border: rgba(216, 223, 235, 0.12);
+  --fmh-placeholder-bg: rgba(255, 255, 255, 0.025);
+  --fmh-footer-border: rgba(218, 225, 236, 0.11);
+  --fmh-footer-bg: rgba(7, 9, 12, 0.74);
+  --fmh-footer-link: rgba(226, 232, 241, 0.72);
+  --fmh-footer-link-hover: #ffffff;
+  --fmh-footer-meta: rgba(169, 175, 186, 0.72);
+  --fmh-theme-toggle-indicator:
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.12) 34%, transparent 35%),
+    linear-gradient(145deg, #d6dbe4 0%, #8f97a4 54%, #3a404a 100%);
+  --fmh-theme-toggle-current: rgba(223, 230, 240, 0.7);
+}
+
+html[data-fmh-theme="light"] {
+  --fmh-bg: #eef1f5;
+  --fmh-bg-alt: #e3e8ee;
+  --fmh-bg-elevated: #f9fbfd;
+  --fmh-panel: linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(228, 233, 240, 0.9));
+  --fmh-panel-strong: linear-gradient(160deg, rgba(255, 255, 255, 0.98), rgba(220, 226, 234, 0.96));
+  --fmh-panel-soft: rgba(240, 243, 247, 0.9);
+  --fmh-border: rgba(66, 78, 94, 0.14);
+  --fmh-border-strong: rgba(54, 65, 79, 0.24);
+  --fmh-text: #171c23;
+  --fmh-muted: #5d6674;
+  --fmh-metal: #2d3642;
+  --fmh-metal-low: #76808d;
+  --fmh-red: #97232d;
+  --fmh-red-bright: #c63d49;
+  --fmh-red-soft: rgba(151, 35, 45, 0.12);
+  --fmh-glow: rgba(255, 255, 255, 0.55);
+  --fmh-shadow: 0 26px 70px rgba(74, 84, 98, 0.16);
+  --fmh-page-bg:
+    radial-gradient(960px 420px at 15% -6%, rgba(255, 255, 255, 0.75), transparent 64%),
+    radial-gradient(700px 400px at 100% 2%, rgba(198, 61, 73, 0.16), transparent 62%),
+    radial-gradient(680px 380px at 50% 100%, rgba(255, 255, 255, 0.35), transparent 70%),
+    linear-gradient(180deg, #f7f8fb 0%, #edf1f6 38%, #e3e8ee 100%);
+  --fmh-grid:
+    linear-gradient(rgba(96, 108, 122, 0.18) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(96, 108, 122, 0.16) 1px, transparent 1px);
+  --fmh-grid-opacity: 0.092;
+  --fmh-grid-opacity-mobile: 0.074;
+  --fmh-grid-mask: linear-gradient(180deg, rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.06) 40%, transparent 92%);
+  --fmh-page-overlay:
+    radial-gradient(540px 220px at 50% 0%, rgba(255, 255, 255, 0.52), transparent 70%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(217, 224, 232, 0.28) 68%, rgba(204, 212, 223, 0.58) 100%);
+  --fmh-topbar-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.1)),
+    linear-gradient(160deg, rgba(249, 251, 253, 0.94), rgba(226, 232, 239, 0.95));
+  --fmh-topbar-shadow: 0 10px 30px rgba(75, 86, 101, 0.14);
+  --fmh-brand-shadow: drop-shadow(0 10px 24px rgba(132, 142, 155, 0.18));
+  --fmh-control-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(241, 244, 248, 0.55)),
+    rgba(255, 255, 255, 0.55);
+  --fmh-control-hover-bg:
+    linear-gradient(180deg, rgba(198, 61, 73, 0.14), rgba(198, 61, 73, 0.04)),
+    rgba(255, 255, 255, 0.72);
+  --fmh-control-hover-border: rgba(198, 61, 73, 0.34);
+  --fmh-control-hover-color: #6e1620;
+  --fmh-control-hover-shadow: 0 14px 26px rgba(113, 49, 56, 0.16);
+  --fmh-button-primary-color: #fff8f8;
+  --fmh-button-primary-border: rgba(169, 43, 55, 0.42);
+  --fmh-button-primary-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0)),
+    linear-gradient(135deg, #7c1822 0%, #b92f3b 52%, #d9636e 100%);
+  --fmh-button-primary-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 18px 34px rgba(140, 49, 60, 0.18);
+  --fmh-panel-highlight: linear-gradient(180deg, rgba(255, 255, 255, 0.65), transparent 24%);
+  --fmh-stat-border: rgba(74, 86, 101, 0.12);
+  --fmh-stat-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(245, 247, 250, 0.4)),
+    rgba(255, 255, 255, 0.48);
+  --fmh-input-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(241, 244, 248, 0.45)),
+    rgba(255, 255, 255, 0.56);
+  --fmh-placeholder: #7a8593;
+  --fmh-card-border: rgba(73, 84, 98, 0.12);
+  --fmh-avatar-text: #f8fafc;
+  --fmh-avatar-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.44), rgba(255, 255, 255, 0.08)),
+    linear-gradient(145deg, #55606f 0%, #adb5c0 52%, #edf1f6 100%);
+  --fmh-avatar-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 12px 24px rgba(114, 124, 136, 0.14);
+  --fmh-avatar-live-ring: 0 0 0 3px rgba(151, 35, 45, 0.12);
+  --fmh-avatar-live-pulse: rgba(170, 44, 56, 0.56);
+  --fmh-chip-text: #212933;
+  --fmh-chip-border: rgba(69, 80, 93, 0.15);
+  --fmh-chip-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(236, 240, 245, 0.48)),
+    rgba(255, 255, 255, 0.45);
+  --fmh-meta-border: rgba(69, 80, 93, 0.12);
+  --fmh-meta-bg: rgba(255, 255, 255, 0.42);
+  --fmh-meta-text: #4a5563;
+  --fmh-profile-cover-bg:
+    radial-gradient(520px 240px at 50% 0%, rgba(255, 255, 255, 0.72), transparent 65%),
+    linear-gradient(180deg, #d7dde5 0%, #bbc5d1 100%);
+  --fmh-live-badge-border: rgba(171, 52, 63, 0.36);
+  --fmh-live-badge-bg: linear-gradient(180deg, rgba(220, 89, 101, 0.24), rgba(134, 24, 34, 0.94));
+  --fmh-live-badge-text: #fff7f8;
+  --fmh-live-banner-border: rgba(175, 54, 65, 0.16);
+  --fmh-live-banner-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0)),
+    linear-gradient(180deg, rgba(209, 72, 84, 0.14), rgba(255, 245, 246, 0.96));
+  --fmh-live-summary-text: #8b2530;
+  --fmh-live-title-text: #50141c;
+  --fmh-live-link-text: #8f2230;
+  --fmh-live-link-hover: #62161f;
+  --fmh-share-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0)),
+    rgba(198, 61, 73, 0.08);
+  --fmh-share-border: rgba(178, 55, 67, 0.16);
+  --fmh-share-url-bg: rgba(244, 247, 250, 0.94);
+  --fmh-share-url-text: #25303c;
+  --fmh-copy-copied-color: #fff8f9;
+  --fmh-copy-copied-bg: linear-gradient(135deg, #8e2330, #ca4855);
+  --fmh-destination-bg: rgba(255, 255, 255, 0.48);
+  --fmh-destination-border: rgba(68, 79, 92, 0.1);
+  --fmh-placeholder-border: rgba(73, 84, 98, 0.14);
+  --fmh-placeholder-bg: rgba(255, 255, 255, 0.38);
+  --fmh-footer-border: rgba(75, 86, 101, 0.12);
+  --fmh-footer-bg: rgba(238, 242, 246, 0.86);
+  --fmh-footer-link: rgba(41, 49, 60, 0.72);
+  --fmh-footer-link-hover: #10151b;
+  --fmh-footer-meta: rgba(92, 102, 116, 0.78);
+  --fmh-theme-toggle-indicator:
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.28) 34%, transparent 35%),
+    linear-gradient(145deg, #fff7db 0%, #f0d56a 44%, #c94852 100%);
+  --fmh-theme-toggle-current: rgba(72, 83, 98, 0.76);
+}
+
+html[data-fmh-theme="dark"] {
+  color-scheme: dark;
+}
+
+html[data-fmh-theme="light"] {
+  color-scheme: light;
 }
 
 * {
@@ -36,11 +259,7 @@ body.findmehere-page {
   margin: 0;
   color: var(--fmh-text);
   font-family: "SuiGenerisRg", "Segoe UI", sans-serif;
-  background:
-    radial-gradient(880px 420px at 18% -4%, rgba(218, 225, 237, 0.08), transparent 68%),
-    radial-gradient(720px 420px at 100% 8%, rgba(178, 31, 45, 0.16), transparent 64%),
-    radial-gradient(640px 360px at 50% 100%, rgba(255, 255, 255, 0.035), transparent 70%),
-    linear-gradient(180deg, #07080a 0%, #0a0c10 34%, #040507 100%);
+  background: var(--fmh-page-bg);
   overflow-x: hidden;
 }
 
@@ -49,13 +268,11 @@ body.findmehere-page::before {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  opacity: 0.055;
-  background-image:
-    linear-gradient(rgba(230, 236, 244, 0.5) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(230, 236, 244, 0.45) 1px, transparent 1px);
+  opacity: var(--fmh-grid-opacity);
+  background-image: var(--fmh-grid);
   background-size: 56px 56px;
   background-position: center top;
-  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.56), rgba(0, 0, 0, 0.14) 38%, transparent 92%);
+  mask-image: var(--fmh-grid-mask);
 }
 
 body.findmehere-page::after {
@@ -63,9 +280,7 @@ body.findmehere-page::after {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background:
-    radial-gradient(540px 220px at 50% 0%, rgba(255, 255, 255, 0.06), transparent 70%),
-    linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.28) 65%, rgba(0, 0, 0, 0.62) 100%);
+  background: var(--fmh-page-overlay);
 }
 
 body.findmehere-page a {
@@ -118,10 +333,8 @@ body.findmehere-page input {
   border-radius: 0;
   border-left: 0;
   border-right: 0;
-  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.32);
-  background:
-    linear-gradient(180deg, rgba(244, 246, 250, 0.065), rgba(244, 246, 250, 0)),
-    linear-gradient(160deg, rgba(21, 23, 29, 0.94), rgba(8, 9, 12, 0.96));
+  box-shadow: var(--fmh-topbar-shadow);
+  background: var(--fmh-topbar-bg);
 }
 
 .fmh-brand {
@@ -135,7 +348,7 @@ body.findmehere-page input {
 .fmh-brand-icon {
   display: block;
   object-fit: contain;
-  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.45));
+  filter: var(--fmh-brand-shadow);
 }
 
 .fmh-brand-wordmark {
@@ -215,9 +428,7 @@ body.findmehere-page input {
   border: 1px solid var(--fmh-border-strong);
   padding: 0 15px;
   color: var(--fmh-metal);
-  background:
-    linear-gradient(180deg, rgba(242, 245, 250, 0.06), rgba(242, 245, 250, 0)),
-    rgba(255, 255, 255, 0.03);
+  background: var(--fmh-control-bg);
   cursor: pointer;
   font-size: 0.82rem;
   line-height: 1;
@@ -237,26 +448,57 @@ body.findmehere-page input {
 .fmh-alpha button:focus-visible,
 .fmh-copy-button:focus-visible {
   transform: translateY(-1px);
-  border-color: rgba(223, 61, 75, 0.46);
-  background:
-    linear-gradient(180deg, rgba(223, 61, 75, 0.15), rgba(223, 61, 75, 0.04)),
-    rgba(255, 255, 255, 0.035);
-  color: #fff8f9;
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.24);
+  border-color: var(--fmh-control-hover-border);
+  background: var(--fmh-control-hover-bg);
+  color: var(--fmh-control-hover-color);
+  box-shadow: var(--fmh-control-hover-shadow);
   outline: none;
 }
 
 .fmh-button-primary,
 .fmh-view-toggle button.is-active,
 .fmh-alpha button.is-active {
-  color: #fff4f5;
-  border-color: rgba(226, 79, 94, 0.62);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0)),
-    linear-gradient(135deg, #5f0d16 0%, #a81928 48%, #d63a48 100%);
+  color: var(--fmh-button-primary-color);
+  border-color: var(--fmh-button-primary-border);
+  background: var(--fmh-button-primary-bg);
+  box-shadow: var(--fmh-button-primary-shadow);
+}
+
+.fmh-theme-toggle {
+  gap: 10px;
+  min-width: 128px;
+  justify-content: flex-start;
+  padding-inline: 12px 14px;
+}
+
+.fmh-theme-toggle-copy {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+}
+
+.fmh-theme-toggle-label {
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.fmh-theme-toggle-current {
+  color: var(--fmh-theme-toggle-current);
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.fmh-theme-toggle-indicator {
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  border-radius: 999px;
+  background: var(--fmh-theme-toggle-indicator);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 18px 34px rgba(96, 10, 19, 0.34);
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 6px 12px rgba(0, 0, 0, 0.18);
 }
 
 .fmh-hero {
@@ -282,7 +524,7 @@ body.findmehere-page input {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 22%);
+  background: var(--fmh-panel-highlight);
 }
 
 .fmh-hero-copy {
@@ -324,10 +566,8 @@ body.findmehere-page input {
   position: relative;
   padding: 16px;
   border-radius: var(--fmh-radius-md);
-  border: 1px solid rgba(216, 224, 236, 0.11);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0)),
-    rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--fmh-stat-border);
+  background: var(--fmh-stat-bg);
 }
 
 .fmh-stat-card strong {
@@ -350,9 +590,7 @@ body.findmehere-page input {
   padding: 14px 18px;
   border-radius: 999px;
   border: 1px solid var(--fmh-border);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0)),
-    rgba(7, 8, 11, 0.82);
+  background: var(--fmh-input-bg);
 }
 
 .fmh-search-shell input {
@@ -364,7 +602,7 @@ body.findmehere-page input {
 }
 
 .fmh-search-shell input::placeholder {
-  color: #848b97;
+  color: var(--fmh-placeholder);
 }
 
 .fmh-search-actions,
@@ -433,7 +671,7 @@ body.findmehere-page input {
 .fmh-directory-row,
 .fmh-social-item {
   border-radius: var(--fmh-radius-lg);
-  border: 1px solid rgba(214, 221, 233, 0.1);
+  border: 1px solid var(--fmh-card-border);
   background: var(--fmh-panel-strong);
 }
 
@@ -489,13 +727,11 @@ body.findmehere-page input {
 .fmh-profile-avatar {
   display: grid;
   place-items: center;
-  color: #0f1115;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0)),
-    linear-gradient(145deg, #f1f4f8 0%, #b9c0ca 48%, #727985 100%);
+  color: var(--fmh-avatar-text);
+  background: var(--fmh-avatar-bg);
   position: relative;
   overflow: hidden;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  box-shadow: var(--fmh-avatar-shadow);
 }
 
 .fmh-avatar {
@@ -527,8 +763,8 @@ body.findmehere-page input {
 .fmh-avatar.is-live,
 .fmh-profile-avatar.is-live {
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    0 0 0 3px rgba(178, 31, 45, 0.18);
+    var(--fmh-avatar-shadow),
+    var(--fmh-avatar-live-ring);
 }
 
 .fmh-avatar.is-live::after,
@@ -537,7 +773,7 @@ body.findmehere-page input {
   position: absolute;
   inset: -5px;
   border-radius: inherit;
-  border: 2px solid rgba(223, 61, 75, 0.72);
+  border: 2px solid var(--fmh-avatar-live-pulse);
   animation: fmh-live-pulse 1.8s ease-out infinite;
   pointer-events: none;
 }
@@ -595,7 +831,7 @@ body.findmehere-page input {
 .fmh-handle,
 .fmh-chip,
 .fmh-result-summary strong {
-  color: #f0f3f8;
+  color: var(--fmh-chip-text);
 }
 
 .fmh-chip {
@@ -605,10 +841,8 @@ body.findmehere-page input {
   min-height: 26px;
   padding: 0 10px;
   border-radius: 999px;
-  border: 1px solid rgba(219, 226, 237, 0.18);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0)),
-    rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--fmh-chip-border);
+  background: var(--fmh-chip-bg);
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -630,10 +864,10 @@ body.findmehere-page input {
   min-height: 26px;
   padding: 0 10px;
   border-radius: 999px;
-  border: 1px solid rgba(218, 225, 236, 0.11);
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--fmh-meta-border);
+  background: var(--fmh-meta-bg);
   font-size: 0.72rem;
-  color: #d1d7e1;
+  color: var(--fmh-meta-text);
 }
 
 .fmh-card-url,
@@ -688,9 +922,7 @@ body.findmehere-page input {
 
 .fmh-profile-cover {
   height: clamp(220px, 34vw, 320px);
-  background:
-    radial-gradient(520px 240px at 50% 0%, rgba(255, 255, 255, 0.08), transparent 65%),
-    linear-gradient(180deg, #16191e 0%, #0d1014 100%);
+  background: var(--fmh-profile-cover-bg);
 }
 
 .fmh-profile-body {
@@ -727,9 +959,9 @@ body.findmehere-page input {
   min-height: 24px;
   padding: 0 10px;
   border-radius: 999px;
-  border: 1px solid rgba(225, 72, 87, 0.5);
-  background: linear-gradient(180deg, rgba(211, 44, 58, 0.28), rgba(84, 10, 17, 0.92));
-  color: #fff3f4;
+  border: 1px solid var(--fmh-live-badge-border);
+  background: var(--fmh-live-badge-bg);
+  color: var(--fmh-live-badge-text);
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -747,14 +979,12 @@ body.findmehere-page input {
   gap: 8px;
   padding: 14px 16px;
   border-radius: var(--fmh-radius-lg);
-  border: 1px solid rgba(228, 83, 98, 0.2);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)),
-    linear-gradient(180deg, rgba(99, 11, 22, 0.52), rgba(19, 10, 13, 0.94));
+  border: 1px solid var(--fmh-live-banner-border);
+  background: var(--fmh-live-banner-bg);
 }
 
 .fmh-live-summary {
-  color: #ffe0e3;
+  color: var(--fmh-live-summary-text);
   font-size: 0.78rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -762,13 +992,13 @@ body.findmehere-page input {
 
 .fmh-live-title {
   margin: 0;
-  color: #fff4f5;
+  color: var(--fmh-live-title-text);
   line-height: 1.45;
 }
 
 .fmh-live-link {
   width: fit-content;
-  color: #ffdfe2;
+  color: var(--fmh-live-link-text);
   font-size: 0.76rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -776,7 +1006,7 @@ body.findmehere-page input {
 
 .fmh-live-link:hover,
 .fmh-live-link:focus-visible {
-  color: #ffffff;
+  color: var(--fmh-live-link-hover);
 }
 
 .fmh-profile-grid {
@@ -814,10 +1044,8 @@ body.findmehere-page input {
   gap: 10px;
   padding: 14px;
   border-radius: var(--fmh-radius-lg);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)),
-    rgba(178, 31, 45, 0.08);
-  border: 1px solid rgba(228, 79, 94, 0.2);
+  background: var(--fmh-share-bg);
+  border: 1px solid var(--fmh-share-border);
 }
 
 .fmh-share-row {
@@ -831,16 +1059,16 @@ body.findmehere-page input {
   min-width: 0;
   padding: 12px 14px;
   border-radius: 14px;
-  background: rgba(7, 8, 10, 0.76);
-  color: #f3f6fb;
+  background: var(--fmh-share-url-bg);
+  color: var(--fmh-share-url-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .fmh-copy-button.is-copied {
-  color: #fff8f9;
-  background: linear-gradient(135deg, #7d151f, #c52e3c);
+  color: var(--fmh-copy-copied-color);
+  background: var(--fmh-copy-copied-bg);
   border-color: transparent;
 }
 
@@ -869,8 +1097,8 @@ body.findmehere-page input {
   gap: 12px;
   padding: 14px;
   border-radius: var(--fmh-radius-lg);
-  background: rgba(255, 255, 255, 0.025);
-  border: 1px solid rgba(220, 227, 238, 0.08);
+  background: var(--fmh-destination-bg);
+  border: 1px solid var(--fmh-destination-border);
 }
 
 .fmh-destination-box p {
@@ -884,8 +1112,8 @@ body.findmehere-page input {
   gap: 10px;
   padding: 18px;
   border-radius: var(--fmh-radius-lg);
-  border: 1px dashed rgba(216, 223, 235, 0.12);
-  background: rgba(255, 255, 255, 0.025);
+  border: 1px dashed var(--fmh-placeholder-border);
+  background: var(--fmh-placeholder-bg);
 }
 
 .fmh-empty {
@@ -900,8 +1128,8 @@ body.findmehere-page input {
   margin-top: 28px;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
-  border-top: 1px solid rgba(218, 225, 236, 0.11);
-  background: rgba(7, 9, 12, 0.74);
+  border-top: 1px solid var(--fmh-footer-border);
+  background: var(--fmh-footer-bg);
   backdrop-filter: blur(14px);
 }
 
@@ -931,17 +1159,17 @@ body.findmehere-page input {
 }
 
 .fmh-footer-link {
-  color: rgba(226, 232, 241, 0.72);
+  color: var(--fmh-footer-link);
 }
 
 .fmh-footer-link:hover,
 .fmh-footer-link:focus-visible {
-  color: #ffffff;
+  color: var(--fmh-footer-link-hover);
   outline: none;
 }
 
 .fmh-footer-meta span {
-  color: rgba(169, 175, 186, 0.72);
+  color: var(--fmh-footer-meta);
 }
 
 .fmh-unavailable-card {
@@ -1071,7 +1299,7 @@ body.findmehere-page input {
 @media (max-width: 520px) {
   body.findmehere-page::before {
     background-size: 44px 44px;
-    opacity: 0.045;
+    opacity: var(--fmh-grid-opacity-mobile);
   }
 
   .fmh-panel,

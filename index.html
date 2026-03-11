@@ -12,6 +12,20 @@
   <meta property="og:description" content="Browse the FindMeHere directory for share-first creator profiles and standalone public links at findmehere.live." />
   <link rel="canonical" href="https://findmehere.live/" />
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <script>
+    (function () {
+      var key = "fmh-theme";
+      var theme = "dark";
+      try {
+        var stored = window.localStorage.getItem(key);
+        if (stored === "light" || stored === "dark") theme = stored;
+      } catch (_error) {
+        theme = "dark";
+      }
+      document.documentElement.setAttribute("data-fmh-theme", theme);
+      document.documentElement.style.colorScheme = theme;
+    })();
+  </script>
   <link rel="stylesheet" href="/css/theme-dark.css" />
   <link rel="stylesheet" href="/css/findmehere.css" />
 </head>
