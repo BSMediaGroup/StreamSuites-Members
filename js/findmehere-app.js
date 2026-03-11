@@ -620,9 +620,11 @@
     const head = create("div", "fmh-card-head");
     const copy = create("div", "fmh-name-block");
     const line = create("div", "fmh-name-line");
-    line.append(create("strong", "", profile.display_name), create("span", "fmh-handle", `@${profile.slug}`));
+    const titleRow = create("div", "fmh-title-row");
+    titleRow.append(create("strong", "", profile.display_name));
     const liveBadge = buildLiveBadge(profile, true);
-    if (liveBadge) line.appendChild(liveBadge);
+    if (liveBadge) titleRow.appendChild(liveBadge);
+    line.append(titleRow, create("span", "fmh-handle", `@${profile.slug}`));
     copy.append(line, create("p", "", profile.bio || "FindMeHere share page"));
     head.append(buildAvatar(profile), copy);
 
@@ -675,9 +677,11 @@
     const head = create("div", "fmh-card-head");
     const copy = create("div", "fmh-name-block");
     const line = create("div", "fmh-name-line");
-    line.append(create("strong", "", profile.display_name), create("span", "fmh-handle", `@${profile.slug}`));
+    const titleRow = create("div", "fmh-title-row");
+    titleRow.append(create("strong", "", profile.display_name));
     const liveBadge = buildLiveBadge(profile, true);
-    if (liveBadge) line.appendChild(liveBadge);
+    if (liveBadge) titleRow.appendChild(liveBadge);
+    line.append(titleRow, create("span", "fmh-handle", `@${profile.slug}`));
     copy.append(line, create("p", "", liveStatus?.title || profile.bio || "FindMeHere live listing"));
     head.append(buildAvatar(profile), copy);
 
