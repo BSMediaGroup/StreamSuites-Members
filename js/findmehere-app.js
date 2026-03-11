@@ -504,7 +504,9 @@
     brandIcon.decoding = "async";
 
     const copy = create("div", "fmh-brand-copy");
-    copy.append(create("strong", "", "FindMeHere"), create("span", "", "Premium share-first creator pages"));
+    const brandTitle = create("strong");
+    brandTitle.append(create("span", "", "FindMeHere"), create("span", "fmh-brand-copy-live", "Live"));
+    copy.append(brandTitle, create("span", "", "Premium share-first creator pages"));
 
     brand.append(brandWordmark, brandIcon, copy);
 
@@ -564,7 +566,7 @@
     const left = create("div", "fmh-panel fmh-hero-copy");
     left.append(
       create("span", "fmh-hero-kicker", "findmehere.live"),
-      create("h1", "", "Premium creator pages, built to share cleanly."),
+      create("h1", "", "Find your favourite creators live right now."),
       create("p", "", "FindMeHere is the focused public surface for StreamSuites creators: clean profile discovery, direct share links, and a darker premium presentation that keeps the creator identity front and center.")
     );
     const actions = create("div", "fmh-hero-actions");
