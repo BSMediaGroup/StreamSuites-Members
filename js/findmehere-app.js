@@ -7,7 +7,7 @@
   const THEME_STORAGE_KEY = "fmh-theme";
   const DEFAULT_THEME = "dark";
   const FALLBACK_COVER = "/assets/placeholders/defaultprofilecover.webp";
-  const FMH_WORDMARK_BLOCK_LOGO = "/assets/logos/fmhlogo.png";
+  const FMH_WORDMARK_BLOCK_LOGO = "/assets/logos/fmhwordmarkrender.webp";
   const FMH_ICON_LOGO = "/assets/logos/fmhlogo.png";
   const EMPTY_LIVE_STATUS_SNAPSHOT = Object.freeze({
     schema_version: "v1",
