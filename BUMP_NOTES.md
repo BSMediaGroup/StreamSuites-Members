@@ -1,6 +1,13 @@
 # Bump Notes
 
-## CURRENT VER= 0.4.1-alpha / PENDING VER= 0.4.2-alpha
+## CURRENT VER= 0.4.2-alpha / PENDING VER= none
+
+## Release Prep Completion - v0.4.2-alpha
+
+- This repo still does not carry a repo-local authoritative version file; its release state remains inferred from the adjacent runtime release train and the now-aligned `v0.4.2-alpha` prep material.
+- Release-note source material for this bump now lives in `changelog/v0.4.2-alpha.md`.
+- No local prior release tag is present in this repo clone, so the compare range for GitHub release packaging could not be resolved to a true tag-to-tag span here and must be confirmed before publishing.
+- Earlier sections below remain the cumulative milestone record for the FindMeHere rollout and surface-polish work behind this bump.
 
 ### Technical Notes
 

@@ -32,6 +32,8 @@ StreamSuites-Members/
 |-- BUMP_NOTES.md
 |-- README.md
 |-- _redirects
+|-- changelog/
+|   `-- v0.4.2-alpha.md
 |-- favicon.ico
 |-- functions/
 |   `-- api/
