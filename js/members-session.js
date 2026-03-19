@@ -4,9 +4,115 @@
   const AUTH_PUBLIC_PROFILE_URL = `${AUTH_API_BASE}/api/public/profile`;
   const AUTH_PUBLIC_PROFILE_ME_URL = `${AUTH_API_BASE}/api/public/profile/me`;
   const AUTH_LOGOUT_URL = `${AUTH_API_BASE}/auth/logout`;
+  const DIRECTORY_PAGE_VISIT_URL = `${AUTH_API_BASE}/api/public/analytics/page-visit?surface=directory`;
   const CREATOR_DASHBOARD_URL = "https://creator.streamsuites.app";
   const ADMIN_DASHBOARD_URL = "https://admin.streamsuites.app";
   const AUTH_COMPLETE_MESSAGE_TYPE = "ss_members_auth_complete";
+  const DIRECTORY_SURFACE = "directory";
+  const DIRECTORY_SESSION_MARKER_KEY = "ss_directory_session_marker";
+  let directoryPageVisitPromise = null;
+
+  function canTrackDirectoryPageVisit() {
+    if (typeof window === "undefined" || typeof fetch !== "function" || !window.location) return false;
+    const protocol = String(window.location.protocol || "").toLowerCase();
+    return protocol === "http:" || protocol === "https:";
+  }
+
+  function readSessionStorage() {
+    try {
+      return window.sessionStorage;
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function buildDirectorySessionMarker() {
+    if (window.crypto && typeof window.crypto.randomUUID === "function") {
+      return `dir-${window.crypto.randomUUID()}`;
+    }
+    return `dir-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  }
+
+  function getOrCreateDirectorySessionMarker() {
+    const storage = readSessionStorage();
+    const current = storage?.getItem(DIRECTORY_SESSION_MARKER_KEY);
+    if (current) return current;
+    const created = buildDirectorySessionMarker();
+    storage?.setItem(DIRECTORY_SESSION_MARKER_KEY, created);
+    return created;
+  }
+
+  function normalizeDirectoryPath(pathname) {
+    const raw = String(pathname || "/").trim() || "/";
+    return raw.startsWith("/") ? raw : `/${raw}`;
+  }
+
+  function inferDirectoryPageKey(pathname) {
+    const bodyPage = String(document.body?.dataset?.membersPage || "").trim().toLowerCase();
+    if (bodyPage) return bodyPage;
+
+    const normalizedPath = normalizeDirectoryPath(pathname).replace(/\/+$/, "") || "/";
+    if (normalizedPath === "/") return "directory";
+    if (normalizedPath === "/live") return "live";
+    if (normalizedPath === "/members") return "members";
+    if (normalizedPath === "/notices") return "notices";
+    if (normalizedPath === "/settings") return "settings";
+    if (normalizedPath === "/auth-complete") return "auth-complete";
+    if (normalizedPath.startsWith("/u/")) return "profile";
+
+    const parts = normalizedPath.split("/").filter(Boolean);
+    if (parts.length === 1) return "profile";
+    return parts[parts.length - 1] || "directory";
+  }
+
+  function buildDirectoryPageVisitPayload() {
+    const path = normalizeDirectoryPath(window.location.pathname);
+    if (!path) return null;
+    return {
+      path,
+      page_key: inferDirectoryPageKey(path),
+      title: String(document.title || "").trim() || null,
+      referrer: String(document.referrer || "").trim() || null,
+      session_marker: getOrCreateDirectorySessionMarker(),
+      timestamp: new Date().toISOString(),
+      surface: DIRECTORY_SURFACE
+    };
+  }
+
+  async function trackDirectoryPageVisit() {
+    if (directoryPageVisitPromise || !canTrackDirectoryPageVisit()) {
+      return directoryPageVisitPromise;
+    }
+    const payload = buildDirectoryPageVisitPayload();
+    if (!payload) return null;
+
+    directoryPageVisitPromise = fetch(DIRECTORY_PAGE_VISIT_URL, {
+      method: "POST",
+      cache: "no-store",
+      credentials: "omit",
+      keepalive: true,
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    }).catch(() => null);
+
+    return directoryPageVisitPromise;
+  }
+
+  function scheduleDirectoryPageVisit() {
+    if (!canTrackDirectoryPageVisit()) return;
+    if (document.body?.classList.contains("findmehere-page")) return;
+    const invoke = () => {
+      void trackDirectoryPageVisit();
+    };
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", invoke, { once: true });
+      return;
+    }
+    window.setTimeout(invoke, 0);
+  }
 
   function normalizeAccountType(value) {
     const normalized = String(value || "").trim().toUpperCase();
@@ -261,6 +367,7 @@
   window.StreamSuitesMembersSession = {
     AUTH_API_BASE,
     AUTH_COMPLETE_MESSAGE_TYPE,
+    DIRECTORY_SURFACE,
     normalizeAuthState,
     buildAccountBadges,
     buildAccountMenuItems,
@@ -269,6 +376,9 @@
     logout,
     fetchPublicProfileByCode,
     fetchMyPublicProfile,
-    saveMyPublicProfile
+    saveMyPublicProfile,
+    trackDirectoryPageVisit
   };
+
+  scheduleDirectoryPageVisit();
 })();

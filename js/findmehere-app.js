@@ -1234,6 +1234,9 @@
   async function init() {
     const root = document.getElementById("app");
     if (!root) return;
+    const trackPageVisit = () => {
+      void window.StreamSuitesMembersSession?.trackDirectoryPageVisit?.();
+    };
 
     applyTheme(readStoredTheme());
 
@@ -1252,11 +1255,13 @@
           letter: "all",
           view: "gallery"
         });
+        trackPageVisit();
         return;
       }
 
       if (slug) {
         renderProfile(root, normalizePublicProfile(await fetchPublicProfile(slug), { slug }, liveStatusMap), slug);
+        trackPageVisit();
         return;
       }
 
@@ -1264,9 +1269,11 @@
         profiles: await loadDirectoryProfiles(liveStatusMap),
         ...getInitialDirectoryState()
       });
+      trackPageVisit();
     } catch (_error) {
       clear(root);
       root.appendChild(buildUnavailableState("FindMeHere could not load the latest public profile data right now.", slug));
+      trackPageVisit();
     }
   }
 
