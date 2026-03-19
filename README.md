@@ -29,6 +29,7 @@ Standalone FindMeHere surface deployed to Cloudflare Pages at `https://findmeher
 
 ```text
 StreamSuites-Members/
+|-- BUMP_NOTES.md
 |-- README.md
 |-- _redirects
 |-- favicon.ico
