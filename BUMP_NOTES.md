@@ -1,6 +1,8 @@
 # Bump Notes
 
-## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
+## RELEASED / PACKAGED: 0.4.2-alpha
+
+Packaged / released and no longer the active pending bucket. Preserve new notes for the open `0.4.8-alpha` section below.
 
 ## Release Prep Completion - v0.4.2-alpha
 
@@ -85,3 +87,23 @@
 
 - FindMeHere now reads as a first-class public destination in the platform rather than a temporary members-side surface, with a more premium branded presentation and a complete dual-theme system.
 - The work in this repo for this milestone was iterative and cumulative: brand direction, surface density, copy, theme parity, and shell polish were layered in across multiple passes to arrive at the current `findmehere.live` presentation.
+
+## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
+
+Open bucket for future work only. Do not add new `0.4.8-alpha` prep notes into the released `0.4.2-alpha` section above.
+
+### Technical Notes
+
+- Pending entries for `0.4.8-alpha` go here.
+
+### Human-Readable Notes
+
+- Pending entries for `0.4.8-alpha` go here.
+
+### Files / Areas Touched
+
+- Pending entries for `0.4.8-alpha` go here.
+
+### Risks / Follow-Ups
+
+- Pending entries for `0.4.8-alpha` go here.
