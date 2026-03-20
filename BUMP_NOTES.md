@@ -4,6 +4,17 @@
 
 Packaged / released and no longer the active pending bucket. Preserve new notes for the open `0.4.8-alpha` section below.
 
+## Cross-Repo README Architecture Alignment - 2026-03-21
+
+- The FindMeHere README now includes a repo-scoped Mermaid flowchart, aligned wording around directory-first routing and runtime/Auth authority, refreshed cross-repo references, and a normalized tree using current branch characters.
+- The doc wording now keeps FindMeHere clearly positioned as the active share-first surface that consumes canonical slug, eligibility, and live-status truth rather than owning it.
+- This was a documentation-only pass. No FindMeHere routing, hydration, analytics, or live-view behavior changed in this note.
+
+### Files / Areas Touched
+
+- `README.md`
+- `BUMP_NOTES.md`
+
 ## Release Prep Completion - v0.4.2-alpha
 
 - This repo still does not carry a repo-local authoritative version file; its release state remains inferred from the adjacent runtime release train and the now-aligned `v0.4.2-alpha` prep material.
