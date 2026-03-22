@@ -105,16 +105,26 @@ Open bucket for future work only. Do not add new `0.4.8-alpha` prep notes into t
 
 ### Technical Notes
 
-- Pending entries for `0.4.8-alpha` go here.
+- `js/findmehere-app.js` now builds the FindMeHere shell with page context, allowing the shared header to keep the default FindMeHere mark on directory/live surfaces while supporting profile-only creator branding overrides from future public-theme data when a header logo or brand text is present.
+- The old directory top hero/stat-card composition was replaced by a full-width creator slideshow that prioritizes currently live eligible creators first and then falls back to the existing deterministic profile sort for the rest of the roster.
+- The directory framing moved into a slimmer discovery strip below the slideshow, while the search bar, A-Z filtering, and gallery/list toggles remain in place under the new hierarchy.
+- Public profile normalization now carries additive render hooks for header branding, accent color, button tone/color, font preset, layout preset, and image visibility toggles, all defaulting safely so existing public profiles render essentially unchanged when no theme data exists.
+- Profile pages now include a scoped advanced custom CSS foundation that only accepts approved local selectors and a small allowlist of presentational properties; global selectors, at-rules, and clearly unsafe constructs are rejected.
+- `css/findmehere.css` gained the render-layer support needed for the new header layout, slideshow/discovery composition, responsive profile presets, and profile-only theme variable overrides.
 
 ### Human-Readable Notes
 
-- Pending entries for `0.4.8-alpha` go here.
+- FindMeHere’s public directory now opens with a creator-led slideshow instead of the older bulky split hero, so the surface feels more like a premium discovery entrance and less like a stats dashboard.
+- The shared header is tighter and cleaner, with Live now promoted as the primary call to action, StreamSuites condensed into an icon button, and the Login control now showing either the fallback profile icon or the signed-in avatar.
+- Creator share pages are now ready for future branding and layout personalization without requiring this task to build the creator-side editor first.
 
 ### Files / Areas Touched
 
-- Pending entries for `0.4.8-alpha` go here.
+- `js/findmehere-app.js`
+- `css/findmehere.css`
+- `BUMP_NOTES.md`
 
 ### Risks / Follow-Ups
 
-- Pending entries for `0.4.8-alpha` go here.
+- The advanced custom CSS hook is intentionally conservative for this pass: it only supports approved local selector aliases and a small set of visual properties, so broader creator-controlled styling will require a larger sanitizer/authoring design later.
+- The slideshow currently uses front-end rotation with unobtrusive autoplay plus manual controls; browser-level motion or performance tuning may still be worth checking on lower-powered devices after live QA.

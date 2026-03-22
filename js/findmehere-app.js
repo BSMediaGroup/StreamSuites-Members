@@ -9,6 +9,9 @@
   const FALLBACK_COVER = "/assets/placeholders/defaultprofilecover.webp";
   const FMH_WORDMARK_BLOCK_LOGO = "/assets/logos/fmhwordmarkrender.webp";
   const FMH_ICON_LOGO = "/assets/logos/fmhlogo.png";
+  const STREAMSUITES_ICON = "/assets/icons/ui/streamsuitesicon.svg";
+  const PROFILE_ICON = "/assets/icons/ui/profile.svg";
+  const PROFILE_PAGE_SCOPE_ATTR = "data-fmh-profile-page";
   const EMPTY_LIVE_STATUS_SNAPSHOT = Object.freeze({
     schema_version: "v1",
     generated_at: null,
@@ -96,11 +99,11 @@
     return applyTheme(getActiveTheme() === "light" ? "dark" : "light", true);
   }
 
-  function buildShellFrame() {
+  function buildShellFrame(pageContext = {}) {
     const shell = create("div", "fmh-shell");
     const main = create("main", "fmh-main");
     main.setAttribute("data-fmh-main", "");
-    shell.append(buildTopbar(), main, buildFooter());
+    shell.append(buildTopbar(pageContext), main, buildFooter());
     return { shell, main };
   }
 
@@ -170,6 +173,56 @@
     const parts = String(name || "").trim().split(/\s+/).filter(Boolean).slice(0, 2);
     if (!parts.length) return "FM";
     return parts.map((part) => part.charAt(0).toUpperCase()).join("");
+  }
+
+  function getDefaultAuthState() {
+    const normalizeAuthState = window.StreamSuitesMembersSession?.normalizeAuthState;
+    if (typeof normalizeAuthState === "function") {
+      return normalizeAuthState({});
+    }
+    return {
+      authenticated: false,
+      accountId: "",
+      userCode: "public-user",
+      displayName: "Login",
+      avatarUrl: "",
+      accountType: "PUBLIC",
+      tier: "core",
+      badges: []
+    };
+  }
+
+  function pickFirstString(...values) {
+    for (const value of values) {
+      if (typeof value === "string" && value.trim()) return value.trim();
+    }
+    return "";
+  }
+
+  function pickFirstBoolean(...values) {
+    for (const value of values) {
+      if (value === true || value === false) return value;
+    }
+    return null;
+  }
+
+  function isSafeCssColor(value) {
+    const color = String(value || "").trim();
+    return Boolean(color) && typeof CSS !== "undefined" && typeof CSS.supports === "function" && CSS.supports("color", color);
+  }
+
+  function normalizeThemeColor(value, fallback = "") {
+    return isSafeCssColor(value) ? String(value).trim() : fallback;
+  }
+
+  function normalizePreset(value, allowed, fallback) {
+    const normalized = String(value || "").trim().toLowerCase();
+    return allowed.has(normalized) ? normalized : fallback;
+  }
+
+  function normalizeVisibilityToggle(...values) {
+    const explicit = pickFirstBoolean(...values);
+    return explicit == null ? true : explicit;
   }
 
   function parseViewerCount(value) {
@@ -426,6 +479,155 @@
     };
   }
 
+  function normalizeProfileRenderOptions(profile, fallback = null) {
+    const themeSources = [
+      profile?.findmehere_theme,
+      profile?.findmehereTheme,
+      profile?.public_theme,
+      profile?.publicTheme,
+      profile?.theme,
+      profile?.profile_theme,
+      profile?.profileTheme,
+      profile?.appearance,
+      fallback?.findmehere_theme,
+      fallback?.findmehereTheme,
+      fallback?.public_theme,
+      fallback?.publicTheme,
+      fallback?.theme,
+      fallback?.profile_theme,
+      fallback?.profileTheme,
+      fallback?.appearance
+    ].filter((value) => value && typeof value === "object");
+    const firstTheme = themeSources[0] || {};
+    const headerBrandSources = themeSources
+      .flatMap((theme) => [theme?.header_branding, theme?.headerBranding, theme?.branding, theme?.brand])
+      .filter((value) => value && typeof value === "object");
+    const firstHeaderBrand = headerBrandSources[0] || {};
+    const imageSettings = themeSources
+      .flatMap((theme) => [theme?.image_visibility, theme?.imageVisibility, theme?.images])
+      .filter((value) => value && typeof value === "object");
+    const firstImageSettings = imageSettings[0] || {};
+    const advancedSources = themeSources
+      .flatMap((theme) => [theme?.advanced, theme?.customization, theme?.custom])
+      .filter((value) => value && typeof value === "object");
+    const firstAdvanced = advancedSources[0] || {};
+
+    return {
+      headerBranding: {
+        logoImageUrl: pickFirstString(
+          firstHeaderBrand.logo_image_url,
+          firstHeaderBrand.logoImageUrl,
+          firstHeaderBrand.logo_url,
+          firstHeaderBrand.logoUrl,
+          firstHeaderBrand.brand_image_url,
+          firstHeaderBrand.brandImageUrl,
+          firstHeaderBrand.image,
+          firstTheme.header_logo_image_url,
+          firstTheme.headerLogoImageUrl,
+          profile?.header_logo_image_url,
+          profile?.headerLogoImageUrl
+        ),
+        brandText: pickFirstString(
+          firstHeaderBrand.brand_text,
+          firstHeaderBrand.brandText,
+          firstHeaderBrand.text,
+          firstTheme.header_brand_text,
+          firstTheme.headerBrandText,
+          profile?.header_brand_text,
+          profile?.headerBrandText
+        )
+      },
+      accentColor: normalizeThemeColor(
+        pickFirstString(
+          firstTheme.page_accent_color,
+          firstTheme.pageAccentColor,
+          firstTheme.accent_color,
+          firstTheme.accentColor,
+          profile?.page_accent_color,
+          profile?.pageAccentColor
+        )
+      ),
+      buttonColor: normalizeThemeColor(
+        pickFirstString(
+          firstTheme.button_color,
+          firstTheme.buttonColor,
+          firstTheme.button_accent_color,
+          firstTheme.buttonAccentColor,
+          profile?.button_color,
+          profile?.buttonColor
+        )
+      ),
+      buttonTone: normalizePreset(
+        pickFirstString(
+          firstTheme.button_tone,
+          firstTheme.buttonTone,
+          profile?.button_tone,
+          profile?.buttonTone
+        ),
+        new Set(["brand", "soft", "ghost"]),
+        "brand"
+      ),
+      fontPreset: normalizePreset(
+        pickFirstString(
+          firstTheme.font_style,
+          firstTheme.fontStyle,
+          firstTheme.font_preset,
+          firstTheme.fontPreset,
+          profile?.font_style,
+          profile?.fontStyle
+        ),
+        new Set(["default", "editorial", "condensed", "mono"]),
+        "default"
+      ),
+      layoutPreset: normalizePreset(
+        pickFirstString(
+          firstTheme.layout_preset,
+          firstTheme.layoutPreset,
+          profile?.layout_preset,
+          profile?.layoutPreset
+        ),
+        new Set(["standard", "condensed", "expanded"]),
+        "standard"
+      ),
+      imageVisibility: {
+        showCover: normalizeVisibilityToggle(
+          firstImageSettings.show_cover,
+          firstImageSettings.showCover,
+          firstTheme.show_cover_image,
+          firstTheme.showCoverImage,
+          profile?.show_cover_image,
+          profile?.showCoverImage
+        ),
+        showAvatar: normalizeVisibilityToggle(
+          firstImageSettings.show_avatar,
+          firstImageSettings.showAvatar,
+          firstTheme.show_avatar_image,
+          firstTheme.showAvatarImage,
+          profile?.show_avatar_image,
+          profile?.showAvatarImage
+        ),
+        showBackground: normalizeVisibilityToggle(
+          firstImageSettings.show_background,
+          firstImageSettings.showBackground,
+          firstTheme.show_background_image,
+          firstTheme.showBackgroundImage,
+          profile?.show_background_image,
+          profile?.showBackgroundImage
+        )
+      },
+      customCss: pickFirstString(
+        firstAdvanced.profile_custom_css,
+        firstAdvanced.profileCustomCss,
+        firstTheme.profile_custom_css,
+        firstTheme.profileCustomCss,
+        firstTheme.custom_css,
+        firstTheme.customCss,
+        profile?.profile_custom_css,
+        profile?.profileCustomCss
+      )
+    };
+  }
+
   function normalizePublicProfile(profile, fallback = null, liveStatusMap = null) {
     const slug = normalizeSlug(
       profile?.public_slug ||
@@ -449,7 +651,8 @@
       role: String(profile?.role || fallback?.role || "").trim(),
       account_type: String(profile?.account_type || fallback?.account_type || "").trim(),
       bio: String(profile?.bio || "").trim(),
-      cover_image_url: String(profile?.cover_image_url || "").trim() || FALLBACK_COVER,
+      cover_image_url: pickFirstString(profile?.cover_image_url, profile?.banner_image_url, fallback?.cover_image_url, fallback?.banner_image_url) || FALLBACK_COVER,
+      background_image_url: pickFirstString(profile?.background_image_url, fallback?.background_image_url),
       social_links: normalizeSocialLinks(profile?.social_links),
       is_listed: explicitListed === false ? false : profile?.listed === false ? false : profile?.community_listed === false ? false : true,
       is_anonymous: profile?.is_anonymous === true,
@@ -459,7 +662,8 @@
       findmehere_eligible: explicitEligible === false ? false : explicitEligible === true ? true : hasCanonicalSlug,
       findmehere_share_url: String(profile?.findmehere_share_url || fallback?.findmehere_share_url || (hasCanonicalSlug ? `${window.location.origin}/${slug}` : "")).trim(),
       can_edit: profile?.can_edit === true,
-      live_status: resolveLiveStatus(profile, liveStatusMap) || resolveLiveStatus(fallback, liveStatusMap)
+      live_status: resolveLiveStatus(profile, liveStatusMap) || resolveLiveStatus(fallback, liveStatusMap),
+      render_theme: normalizeProfileRenderOptions(profile, fallback)
     };
   }
 
@@ -553,11 +757,24 @@
     return [...map.values()];
   }
 
-  function buildTopbar() {
-    const bar = create("header", "fmh-topbar");
+  function resolveHeaderBranding(pageContext = {}) {
+    const profile = pageContext.profile;
+    const theme = profile?.render_theme;
+    const logoImageUrl = pickFirstString(theme?.headerBranding?.logoImageUrl);
+    const brandText = pickFirstString(theme?.headerBranding?.brandText);
+    const isProfileOverride = pageContext.page === "profile" && Boolean(logoImageUrl || brandText);
+    return {
+      href: isProfileOverride && profile?.slug ? `/${encodeURIComponent(profile.slug)}` : "/",
+      logoImageUrl,
+      brandText,
+      isProfileOverride
+    };
+  }
 
+  function buildDefaultBrandNode() {
     const brand = create("a", "fmh-brand");
     brand.href = "/";
+
     const brandWordmark = create("img", "fmh-brand-wordmark");
     brandWordmark.src = FMH_WORDMARK_BLOCK_LOGO;
     brandWordmark.alt = "FindMeHere";
@@ -568,14 +785,95 @@
     brandIcon.alt = "FindMeHere";
     brandIcon.decoding = "async";
 
-    const copy = create("div", "fmh-brand-copy");
-    const brandTitle = create("strong");
-    brandTitle.append(create("span", "", "FindMeHere"), create("span", "fmh-brand-copy-live", "Live"));
-    copy.append(brandTitle, create("span", "", "Premium share-first creator pages"));
+    brand.append(brandWordmark, brandIcon);
+    return brand;
+  }
 
-    brand.append(brandWordmark, brandIcon, copy);
+  function buildProfileBrandNode(branding, profile) {
+    const brand = create("a", "fmh-brand fmh-brand-profile");
+    brand.href = branding.href;
+    brand.title = profile?.display_name ? `${profile.display_name} profile` : "Profile";
+
+    const fallbackIcon = create("img", "fmh-brand-icon");
+    fallbackIcon.src = FMH_ICON_LOGO;
+    fallbackIcon.alt = "FindMeHere";
+    fallbackIcon.decoding = "async";
+    brand.appendChild(fallbackIcon);
+
+    const lockup = create("span", "fmh-brand-profile-lockup");
+    if (branding.logoImageUrl) {
+      const logo = create("img", "fmh-brand-profile-image");
+      logo.src = branding.logoImageUrl;
+      logo.alt = branding.brandText || `${profile?.display_name || "Creator"} brand`;
+      logo.decoding = "async";
+      lockup.appendChild(logo);
+    }
+    if (branding.brandText) {
+      lockup.appendChild(create("span", "fmh-brand-profile-text", branding.brandText));
+    }
+    brand.appendChild(lockup);
+    return brand;
+  }
+
+  function buildTopbar(pageContext = {}) {
+    const bar = create("header", "fmh-topbar");
+    const authState = pageContext.authState || getDefaultAuthState();
+    const branding = resolveHeaderBranding(pageContext);
+    const brand = branding.isProfileOverride
+      ? buildProfileBrandNode(branding, pageContext.profile)
+      : buildDefaultBrandNode();
+    if (branding.isProfileOverride) {
+      bar.dataset.branding = "profile";
+    }
 
     const actions = create("div", "fmh-topbar-actions");
+    const live = create("a", "fmh-button fmh-button-primary", "Live now");
+    live.href = "/live";
+
+    const streamSuites = create("a", "fmh-link-button fmh-icon-button", "");
+    streamSuites.href = STREAMSUITES_HOME;
+    streamSuites.target = "_blank";
+    streamSuites.rel = "noopener noreferrer";
+    streamSuites.setAttribute("aria-label", "Open StreamSuites");
+    streamSuites.setAttribute("title", "Open StreamSuites");
+    const streamSuitesIcon = create("img", "fmh-button-icon");
+    streamSuitesIcon.src = STREAMSUITES_ICON;
+    streamSuitesIcon.alt = "";
+    streamSuitesIcon.decoding = "async";
+    streamSuitesIcon.setAttribute("aria-hidden", "true");
+    streamSuites.appendChild(streamSuitesIcon);
+
+    const login = create("a", "fmh-link-button fmh-account-button");
+    const isAuthenticated = authState?.authenticated === true;
+    if (isAuthenticated) {
+      login.href = "/settings/";
+      login.setAttribute("aria-label", `${authState.displayName || "Account"} account`);
+      login.setAttribute("title", authState.displayName || "Account");
+    } else {
+      login.href = `${STREAMSUITES_HOME}/public-login.html`;
+      login.target = "_blank";
+      login.rel = "noopener noreferrer";
+      login.setAttribute("aria-label", "Login");
+      login.setAttribute("title", "Login");
+    }
+    const loginAvatar = create("span", "fmh-account-avatar");
+    if (isAuthenticated && authState.avatarUrl) {
+      const avatarImage = create("img");
+      avatarImage.src = authState.avatarUrl;
+      avatarImage.alt = "";
+      avatarImage.decoding = "async";
+      avatarImage.setAttribute("aria-hidden", "true");
+      loginAvatar.appendChild(avatarImage);
+    } else {
+      const fallbackAvatar = create("img");
+      fallbackAvatar.src = PROFILE_ICON;
+      fallbackAvatar.alt = "";
+      fallbackAvatar.decoding = "async";
+      fallbackAvatar.setAttribute("aria-hidden", "true");
+      loginAvatar.appendChild(fallbackAvatar);
+    }
+    login.append(loginAvatar, create("span", "fmh-account-label", "Login"));
+
     const themeToggle = create("button", "fmh-link-button fmh-theme-toggle");
     const currentTheme = getActiveTheme();
     const nextTheme = currentTheme === "light" ? "dark" : "light";
@@ -601,19 +899,7 @@
     themeToggle.appendChild(toggleTrack);
     themeToggle.addEventListener("click", toggleTheme);
 
-    const live = create("a", "fmh-link-button", "Live now");
-    live.href = "/live";
-    const streamSuites = create("a", "fmh-link-button", "Open StreamSuites");
-    streamSuites.href = STREAMSUITES_HOME;
-    streamSuites.target = "_blank";
-    streamSuites.rel = "noopener noreferrer";
-
-    const creatorLogin = create("a", "fmh-button fmh-button-primary", "Creator Sign In");
-    creatorLogin.href = `${STREAMSUITES_HOME}/public-login.html`;
-    creatorLogin.target = "_blank";
-    creatorLogin.rel = "noopener noreferrer";
-    actions.append(themeToggle, live, streamSuites, creatorLogin);
-
+    actions.append(live, streamSuites, login, themeToggle);
     bar.append(brand, actions);
     return bar;
   }
@@ -650,43 +936,160 @@
     return shell;
   }
 
-  function buildHero(eligibleCount) {
-    const hero = create("section", "fmh-hero");
+  function buildDirectoryHeroRoster(profiles) {
+    const liveProfiles = sortLiveProfiles(profiles.filter((profile) => getLiveStatus(profile)));
+    const liveSlugs = new Set(liveProfiles.map((profile) => profile.slug));
+    const remainder = sortProfiles(profiles.filter((profile) => !liveSlugs.has(profile.slug)));
+    return [...liveProfiles, ...remainder];
+  }
 
-    const left = create("div", "fmh-panel fmh-hero-copy");
-    left.append(
-      create("span", "fmh-hero-kicker", "findmehere.live"),
-      create("h1", "", "Find your favourite creators live right now."),
-      create("p", "", "FindMeHere is the focused public surface for StreamSuites creators: clean profile discovery, direct share links, and a darker premium presentation that keeps the creator identity front and center.")
+  function buildShowcaseSlide(profile) {
+    const theme = profile.render_theme || {};
+    const liveStatus = getLiveStatus(profile);
+    const slide = create("article", "fmh-showcase-slide");
+    const media = create("div", "fmh-showcase-media");
+    media.style.setProperty("--fmh-showcase-image", `url("${profile.cover_image_url || FALLBACK_COVER}")`);
+    if (theme.accentColor) {
+      media.style.setProperty("--fmh-showcase-accent", theme.accentColor);
+    }
+
+    const content = create("div", "fmh-showcase-content");
+    const eyebrow = create("div", "fmh-showcase-eyebrow");
+    eyebrow.appendChild(create("span", "fmh-chip", liveStatus ? "Live now" : "Featured creator"));
+    eyebrow.appendChild(create("span", "fmh-card-url", toSharePath(profile).replace(/^https?:\/\//i, "")));
+
+    const head = create("div", "fmh-showcase-head");
+    const identity = create("div", "fmh-showcase-identity");
+    identity.append(buildAvatar(profile, true));
+    const copy = create("div", "fmh-showcase-copy");
+    const title = create("div", "fmh-showcase-title");
+    title.append(create("h2", "", profile.display_name));
+    const liveBadge = buildLiveBadge(profile);
+    if (liveBadge) title.appendChild(liveBadge);
+    copy.append(
+      title,
+      create("p", "fmh-showcase-handle", `@${profile.slug}`),
+      create("p", "", liveStatus?.title || profile.bio || "Open this creator's share-first FindMeHere page.")
     );
+    identity.appendChild(copy);
+    head.appendChild(identity);
+
+    const meta = create("div", "fmh-showcase-meta");
+    [roleLabel(profile.role), tierLabel(profile.tier), ...buildLivePlatformSummary(profile)].filter(Boolean).forEach((item) => {
+      meta.appendChild(create("span", "", item));
+    });
+
+    const actions = create("div", "fmh-showcase-actions");
+    const openProfile = create("a", "fmh-button fmh-button-primary", "Open FindMeHere");
+    openProfile.href = `/${encodeURIComponent(profile.slug)}`;
+    actions.appendChild(openProfile);
+    if (liveStatus?.url) {
+      const watchStream = create("a", "fmh-link-button", "Watch stream");
+      watchStream.href = liveStatus.url;
+      watchStream.target = "_blank";
+      watchStream.rel = "noopener noreferrer";
+      actions.appendChild(watchStream);
+    } else if (profile.streamsuites_profile_url) {
+      const openStreamSuites = create("a", "fmh-link-button", "Open StreamSuites");
+      openStreamSuites.href = profile.streamsuites_profile_url;
+      openStreamSuites.target = "_blank";
+      openStreamSuites.rel = "noopener noreferrer";
+      actions.appendChild(openStreamSuites);
+    }
+
+    content.append(eyebrow, head, meta, actions);
+    media.appendChild(content);
+    slide.appendChild(media);
+    return slide;
+  }
+
+  function buildDirectoryShowcase(profiles) {
+    const roster = buildDirectoryHeroRoster(profiles);
+    const section = create("section", "fmh-showcase");
+    if (!roster.length) return section;
+
+    const viewport = create("div", "fmh-showcase-viewport");
+    const track = create("div", "fmh-showcase-track");
+    roster.forEach((profile) => track.appendChild(buildShowcaseSlide(profile)));
+    viewport.appendChild(track);
+    section.appendChild(viewport);
+
+    let activeIndex = 0;
+    const goTo = (index) => {
+      activeIndex = (index + roster.length) % roster.length;
+      track.style.transform = `translateX(-${activeIndex * 100}%)`;
+      section.querySelectorAll("[data-fmh-showcase-dot]").forEach((button, buttonIndex) => {
+        button.classList.toggle("is-active", buttonIndex === activeIndex);
+        button.setAttribute("aria-pressed", buttonIndex === activeIndex ? "true" : "false");
+      });
+    };
+
+    if (roster.length > 1) {
+      const chrome = create("div", "fmh-showcase-chrome");
+      const arrows = create("div", "fmh-showcase-arrows");
+      const previous = create("button", "fmh-link-button fmh-showcase-arrow", "Prev");
+      previous.type = "button";
+      previous.addEventListener("click", () => goTo(activeIndex - 1));
+      const next = create("button", "fmh-link-button fmh-showcase-arrow", "Next");
+      next.type = "button";
+      next.addEventListener("click", () => goTo(activeIndex + 1));
+      arrows.append(previous, next);
+
+      const dots = create("div", "fmh-showcase-dots");
+      roster.forEach((_profile, index) => {
+        const dot = create("button", "fmh-showcase-dot");
+        dot.type = "button";
+        dot.setAttribute("data-fmh-showcase-dot", "");
+        dot.setAttribute("aria-label", `Go to slide ${index + 1}`);
+        dot.addEventListener("click", () => goTo(index));
+        dots.appendChild(dot);
+      });
+      chrome.append(arrows, dots);
+      section.appendChild(chrome);
+
+      const interval = window.setInterval(() => {
+        if (!section.isConnected) {
+          window.clearInterval(interval);
+          return;
+        }
+        goTo(activeIndex + 1);
+      }, 6500);
+    }
+
+    goTo(0);
+    return section;
+  }
+
+  function buildDirectoryDiscoveryStrip(eligibleCount, liveCount) {
+    const strip = create("section", "fmh-discovery-strip");
+    const copy = create("div", "fmh-discovery-copy");
+    copy.append(
+      create("span", "fmh-hero-kicker", "findmehere.live"),
+      create("h1", "", "Discover creators through share-first public pages."),
+      create("p", "", "Browse the live-priority slideshow, jump into the directory, and scan profiles without the older bulky hero card stack.")
+    );
+
+    const stats = create("div", "fmh-discovery-stats");
+    [
+      { value: String(liveCount), label: "Live right now" },
+      { value: String(eligibleCount), label: "Eligible profiles" },
+      { value: "A-Z", label: "Quick filters" },
+      { value: "2 views", label: "Gallery and list" }
+    ].forEach((item) => {
+      const stat = create("div", "fmh-discovery-stat");
+      stat.append(create("strong", "", item.value), create("span", "", item.label));
+      stats.appendChild(stat);
+    });
+
     const actions = create("div", "fmh-hero-actions");
     const browse = create("a", "fmh-button fmh-button-primary", "Browse directory");
     browse.href = "#directory";
     const live = create("a", "fmh-link-button", "See live now");
     live.href = "/live";
-    const setup = create("a", "fmh-link-button", "Set up your profile in StreamSuites");
-    setup.href = STREAMSUITES_HOME;
-    setup.target = "_blank";
-    setup.rel = "noopener noreferrer";
-    actions.append(browse, live, setup);
-    left.appendChild(actions);
+    actions.append(browse, live);
 
-    const right = create("div", "fmh-panel");
-    const stats = create("div", "fmh-stat-grid");
-    [
-      { value: String(eligibleCount), label: "Eligible FindMeHere profiles" },
-      { value: "A-Z", label: "Quick alphabet filtering" },
-      { value: "2 views", label: "Gallery and list layouts" },
-      { value: "Share first", label: "FindMeHere URL only" }
-    ].forEach((item) => {
-      const card = create("div", "fmh-stat-card");
-      card.append(create("strong", "", item.value), create("span", "", item.label));
-      stats.appendChild(card);
-    });
-    right.appendChild(stats);
-
-    hero.append(left, right);
-    return hero;
+    strip.append(copy, stats, actions);
+    return strip;
   }
 
   function buildSearch(query, onInput) {
@@ -832,11 +1235,11 @@
     return row;
   }
 
-  function buildUnavailableState(reason, slug) {
+  function buildUnavailableState(reason, slug, authState) {
     setMeta("Profile unavailable | FindMeHere", "This FindMeHere route is unavailable because the profile is not listed or cannot be shown on FindMeHere.");
     setCanonical(slug ? `/${encodeURIComponent(slug)}` : "/");
 
-    const { shell, main } = buildShellFrame();
+    const { shell, main } = buildShellFrame({ page: "unavailable", authState });
 
     const route = create("section", "fmh-profile-route");
     const card = create("div", "fmh-panel fmh-unavailable-card");
@@ -864,13 +1267,14 @@
   function renderDirectory(root, state) {
     const eligibleProfiles = sortProfiles(state.profiles.filter(isEligibleProfile));
     const filtered = eligibleProfiles.filter((profile) => matchesAlphabet(profile, state.letter) && matchesQuery(profile, state.query));
+    const liveCount = eligibleProfiles.filter((profile) => getLiveStatus(profile)).length;
 
     setMeta("FindMeHere Directory | Share-first creator profiles", "Browse the FindMeHere directory, filter creators by name, and open standalone share pages backed by StreamSuites profile data.");
     setCanonical("/");
     updateDirectoryStateUrl(state);
 
-    const { shell, main } = buildShellFrame();
-    main.appendChild(buildHero(eligibleProfiles.length));
+    const { shell, main } = buildShellFrame({ page: "directory", authState: state.authState });
+    main.append(buildDirectoryShowcase(eligibleProfiles), buildDirectoryDiscoveryStrip(eligibleProfiles.length, liveCount));
 
     const section = create("section", "");
     section.id = "directory";
@@ -980,7 +1384,7 @@
     setMeta("FindMeHere Live | Creators live right now", "Browse creators who are currently live and eligible to appear on FindMeHere.");
     setCanonical("/live");
 
-    const { shell, main } = buildShellFrame();
+    const { shell, main } = buildShellFrame({ page: "live", authState: state.authState });
 
     const hero = create("section", "fmh-hero");
     const left = create("div", "fmh-panel fmh-hero-copy");
@@ -1082,10 +1486,130 @@
     return link;
   }
 
-  function renderProfile(root, profile, requestedSlug) {
+  // Keep advanced profile CSS on a short leash: only approved local selectors and non-layout-breaking properties.
+  function buildScopedProfileCustomCss(cssText) {
+    const source = String(cssText || "").trim();
+    if (!source) return "";
+    if (/[<]/.test(source) || /@(?:import|media|supports|layer|keyframes|font-face)/i.test(source)) {
+      return "";
+    }
+
+    const selectorMap = new Map([
+      [".profile-root", `[${PROFILE_PAGE_SCOPE_ATTR}]`],
+      [".profile-hero", `[${PROFILE_PAGE_SCOPE_ATTR}] .fmh-profile-hero`],
+      [".profile-cover", `[${PROFILE_PAGE_SCOPE_ATTR}] .fmh-profile-cover`],
+      [".profile-body", `[${PROFILE_PAGE_SCOPE_ATTR}] .fmh-profile-body`],
+      [".profile-summary", `[${PROFILE_PAGE_SCOPE_ATTR}] .fmh-profile-summary`],
+      [".profile-avatar", `[${PROFILE_PAGE_SCOPE_ATTR}] .fmh-profile-avatar`],
+      [".profile-title", `[${PROFILE_PAGE_SCOPE_ATTR}] .fmh-profile-title`],
+      [".profile-meta", `[${PROFILE_PAGE_SCOPE_ATTR}] .fmh-profile-meta`],
+      [".profile-about", `[${PROFILE_PAGE_SCOPE_ATTR}] .fmh-profile-about`],
+      [".profile-live", `[${PROFILE_PAGE_SCOPE_ATTR}] .fmh-live-banner`],
+      [".profile-actions", `[${PROFILE_PAGE_SCOPE_ATTR}] .fmh-profile-actions`],
+      [".profile-grid", `[${PROFILE_PAGE_SCOPE_ATTR}] .fmh-profile-grid`],
+      [".profile-section", `[${PROFILE_PAGE_SCOPE_ATTR}] .fmh-profile-section`],
+      [".profile-links", `[${PROFILE_PAGE_SCOPE_ATTR}] .fmh-social-list`],
+      [".profile-social-item", `[${PROFILE_PAGE_SCOPE_ATTR}] .fmh-social-item`],
+      [".profile-share", `[${PROFILE_PAGE_SCOPE_ATTR}] .fmh-share-box`],
+      [".profile-destination", `[${PROFILE_PAGE_SCOPE_ATTR}] .fmh-destination-box`]
+    ]);
+    const allowedProperties = new Set([
+      "background",
+      "background-color",
+      "background-image",
+      "background-size",
+      "background-position",
+      "border",
+      "border-color",
+      "border-radius",
+      "box-shadow",
+      "color",
+      "opacity",
+      "font-family",
+      "font-size",
+      "font-style",
+      "font-weight",
+      "letter-spacing",
+      "line-height",
+      "text-transform",
+      "text-decoration",
+      "text-shadow",
+      "padding",
+      "padding-block",
+      "padding-inline",
+      "margin",
+      "margin-block",
+      "margin-inline",
+      "gap",
+      "align-items",
+      "justify-content",
+      "backdrop-filter",
+      "filter"
+    ]);
+    const blocks = [];
+    const pattern = /([^{}]+)\{([^{}]+)\}/g;
+    let match;
+    while ((match = pattern.exec(source))) {
+      const selectors = match[1].split(",").map((item) => item.trim()).filter(Boolean);
+      const scopedSelectors = selectors.map((selector) => selectorMap.get(selector)).filter(Boolean);
+      if (!scopedSelectors.length || scopedSelectors.length !== selectors.length) continue;
+
+      const declarations = match[2]
+        .split(";")
+        .map((entry) => entry.trim())
+        .filter(Boolean)
+        .map((entry) => {
+          const separatorIndex = entry.indexOf(":");
+          if (separatorIndex <= 0) return null;
+          const property = entry.slice(0, separatorIndex).trim().toLowerCase();
+          const value = entry.slice(separatorIndex + 1).trim();
+          if (!allowedProperties.has(property)) return null;
+          if (!value || /(?:expression|javascript:|data:text\/html|@import|url\s*\(\s*['"]?\s*javascript:)/i.test(value)) return null;
+          return `${property}: ${value}`;
+        })
+        .filter(Boolean);
+      if (!declarations.length) continue;
+      blocks.push(`${scopedSelectors.join(", ")} { ${declarations.join("; ")}; }`);
+    }
+    return blocks.join("\n");
+  }
+
+  function applyProfileRenderTheme(route, profile) {
+    const theme = profile?.render_theme || {};
+    route.setAttribute(PROFILE_PAGE_SCOPE_ATTR, "");
+    route.dataset.layoutPreset = theme.layoutPreset || "standard";
+    route.dataset.fontPreset = theme.fontPreset || "default";
+    route.dataset.buttonTone = theme.buttonTone || "brand";
+    if (theme.accentColor) route.style.setProperty("--fmh-profile-accent", theme.accentColor);
+    if (theme.buttonColor) route.style.setProperty("--fmh-profile-button", theme.buttonColor);
+    if (theme.imageVisibility?.showBackground !== false && profile.background_image_url) {
+      route.classList.add("has-profile-background");
+      route.style.setProperty("--fmh-profile-background-image", `url("${profile.background_image_url}")`);
+    }
+
+    const scopedCss = buildScopedProfileCustomCss(theme.customCss);
+    if (scopedCss) {
+      const style = document.createElement("style");
+      style.setAttribute("data-fmh-profile-custom-css", profile.slug || "profile");
+      style.textContent = scopedCss;
+      route.appendChild(style);
+    }
+  }
+
+  async function fetchFindMeHereAuthState() {
+    const fetchAuthState = window.StreamSuitesMembersSession?.fetchAuthState;
+    if (typeof fetchAuthState !== "function") return getDefaultAuthState();
+    try {
+      return await fetchAuthState();
+    } catch (_error) {
+      return getDefaultAuthState();
+    }
+  }
+
+  function renderProfile(root, profile, requestedSlug, authState) {
     if (!isEligibleProfile(profile)) {
       clear(root);
-      root.appendChild(buildUnavailableState(`/${requestedSlug} loaded, but this account is not eligible for public FindMeHere listing.`, requestedSlug));
+      root.appendChild(buildUnavailableState(`/${requestedSlug} loaded, but this account is not eligible for public FindMeHere listing.`, requestedSlug, authState));
       return;
     }
 
@@ -1096,15 +1620,21 @@
     setMeta(`${profile.display_name} on FindMeHere`, profile.bio || `Open ${profile.display_name}'s FindMeHere share page on findmehere.live.`);
     setCanonical(`/${encodeURIComponent(profile.slug)}`);
 
-    const { shell, main } = buildShellFrame();
+    const { shell, main } = buildShellFrame({ page: "profile", profile, authState });
 
     const route = create("section", "fmh-profile-route");
+    applyProfileRenderTheme(route, profile);
     const hero = create("article", "fmh-profile-hero");
-    const cover = create("div", "fmh-profile-cover");
-    const coverImage = create("img");
-    coverImage.src = profile.cover_image_url || FALLBACK_COVER;
-    coverImage.alt = `${profile.display_name} cover`;
-    cover.appendChild(coverImage);
+    if (profile.render_theme?.imageVisibility?.showCover !== false) {
+      const cover = create("div", "fmh-profile-cover");
+      const coverImage = create("img");
+      coverImage.src = profile.cover_image_url || FALLBACK_COVER;
+      coverImage.alt = `${profile.display_name} cover`;
+      cover.appendChild(coverImage);
+      hero.appendChild(cover);
+    } else {
+      hero.classList.add("fmh-profile-hero-no-cover");
+    }
 
     const body = create("div", "fmh-profile-body");
     const summary = create("div", "fmh-profile-summary");
@@ -1118,7 +1648,11 @@
     const meta = create("div", "fmh-profile-meta");
     [roleLabel(profile.role), tierLabel(profile.tier), ...getPrimaryPlatforms(profile)].filter(Boolean).forEach((item) => meta.appendChild(create("span", "", item)));
     title.appendChild(meta);
-    summary.append(buildAvatar(profile, true), title);
+    if (profile.render_theme?.imageVisibility?.showAvatar !== false) {
+      summary.append(buildAvatar(profile, true), title);
+    } else {
+      summary.appendChild(title);
+    }
     body.append(summary, create("p", "fmh-profile-about", profile.bio || "This creator has not added a short bio yet."));
     if (getLiveStatus(profile)) {
       const banner = create("div", "fmh-live-banner");
@@ -1146,7 +1680,7 @@
       actions.appendChild(fullProfile);
     }
     body.appendChild(actions);
-    hero.append(cover, body);
+    hero.appendChild(body);
     route.appendChild(hero);
 
     const grid = create("div", "fmh-profile-grid");
@@ -1245,12 +1779,16 @@
 
     const slug = getRouteSlug();
     const liveRoute = isLiveRoute();
-    const liveStatusMap = await fetchLiveStatusMap();
+    const [liveStatusMap, authState] = await Promise.all([
+      fetchLiveStatusMap(),
+      fetchFindMeHereAuthState()
+    ]);
 
     try {
       if (liveRoute) {
         renderLiveDirectory(root, {
           profiles: await loadDirectoryProfiles(liveStatusMap),
+          authState,
           query: "",
           letter: "all",
           view: "gallery"
@@ -1260,19 +1798,20 @@
       }
 
       if (slug) {
-        renderProfile(root, normalizePublicProfile(await fetchPublicProfile(slug), { slug }, liveStatusMap), slug);
+        renderProfile(root, normalizePublicProfile(await fetchPublicProfile(slug), { slug }, liveStatusMap), slug, authState);
         trackPageVisit();
         return;
       }
 
       renderDirectory(root, {
         profiles: await loadDirectoryProfiles(liveStatusMap),
+        authState,
         ...getInitialDirectoryState()
       });
       trackPageVisit();
     } catch (_error) {
       clear(root);
-      root.appendChild(buildUnavailableState("FindMeHere could not load the latest public profile data right now.", slug));
+      root.appendChild(buildUnavailableState("FindMeHere could not load the latest public profile data right now.", slug, authState));
       trackPageVisit();
     }
   }
