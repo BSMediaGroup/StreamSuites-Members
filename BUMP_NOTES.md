@@ -128,3 +128,30 @@ Open bucket for future work only. Do not add new `0.4.8-alpha` prep notes into t
 
 - The advanced custom CSS hook is intentionally conservative for this pass: it only supports approved local selector aliases and a small set of visual properties, so broader creator-controlled styling will require a larger sanitizer/authoring design later.
 - The slideshow currently uses front-end rotation with unobtrusive autoplay plus manual controls; browser-level motion or performance tuning may still be worth checking on lower-powered devices after live QA.
+
+### Header + Hero Refinement Fix Pass - 2026-03-24
+
+#### Technical Notes
+
+- `js/findmehere-app.js` now keeps the directory header action order locked as StreamSuites icon, Login, theme toggle, and the primary `Live now` CTA on the far right, instead of allowing the red CTA to render first in the action cluster.
+- The StreamSuites icon-only control and logged-out Login fallback icon now render as inline `currentColor` SVGs rather than plain SVG images, so the control icons follow the same foreground color as their buttons across dark/light theme and hover/focus state changes while preserving avatar-image swapping for signed-in users.
+- The directory landing composition was reordered so the intro/title block renders first, the slideshow follows immediately after it, and the search/view/A-Z discovery controls stay below the slideshow with existing filtering and view-toggle behavior intact.
+- The slideshow markup now uses a tighter featured-panel rail for tags and CTAs, while `css/findmehere.css` tightens spacing, content box sizing, and responsive alignment so the slide layout feels less loose on wide desktop widths without changing roster sourcing or live-first ordering logic.
+- Mobile header styling was tightened further so the topbar cluster compresses more predictably on narrow widths while retaining the same control order and keeping the `Live now` CTA visually primary.
+
+#### Human-Readable Notes
+
+- FindMeHere now reads in the intended order: header first, intro second, featured creator carousel third, and the actual discovery/search controls after that instead of having the slideshow compete with the directory heading.
+- The header controls now feel more deliberate, with the red `Live now` action consistently anchored as the primary far-right CTA and the non-primary icons finally matching their button color in both themes.
+- The featured creator slideshow keeps the same direction but feels more composed, denser, and more curated rather than like a wide loose banner with extra dead space.
+
+#### Files / Areas Touched
+
+- `js/findmehere-app.js`
+- `css/findmehere.css`
+- `BUMP_NOTES.md`
+
+#### Risks / Follow-Ups
+
+- A very narrow mobile width still warrants live-device QA because the header now uses a more constrained fallback layout there; the required order and CTA priority are preserved, but small-browser chrome differences should still be checked in-device.
+- The icon-color fix is now robust for the two affected header controls because it uses inline SVGs, but any future shared-button icon work should follow the same pattern instead of reintroducing image-based SVG coloring.

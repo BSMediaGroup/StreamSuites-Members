@@ -11,6 +11,10 @@
   const FMH_ICON_LOGO = "/assets/logos/fmhlogo.png";
   const STREAMSUITES_ICON = "/assets/icons/ui/streamsuitesicon.svg";
   const PROFILE_ICON = "/assets/icons/ui/profile.svg";
+  const STREAMSUITES_ICON_PATH =
+    "M279.72,524.79l348.297,-361.939l777.557,0l-345.77,360.646l-201.345,-0l-289.309,302.733l-289.43,0l0,-301.44Zm940.56,450.42l-348.297,361.939l-777.557,-0l345.77,-360.646l201.345,0l289.309,-302.733l289.43,-0l-0,301.44Z";
+  const PROFILE_ICON_PATH =
+    "M492.667,1542.67c79.333,-60.667 168,-108.5 266,-143.5c98,-35 200.666,-52.5 308,-52.5c107.333,-0 210,17.5 308,52.5c98,35 186.666,82.833 266,143.5c54.444,-63.778 96.833,-136.111 127.166,-217c30.334,-80.889 45.5,-167.223 45.5,-259c0,-206.889 -72.722,-383.056 -218.166,-528.5c-145.445,-145.445 -321.611,-218.167 -528.5,-218.167c-206.889,-0 -383.056,72.722 -528.5,218.167c-145.445,145.444 -218.167,321.611 -218.167,528.5c0,91.777 15.167,178.111 45.5,259c30.333,80.889 72.722,153.222 127.167,217Zm574,-382.667c-91.778,-0 -169.167,-31.5 -232.167,-94.5c-63,-63 -94.5,-140.389 -94.5,-232.167c0,-91.777 31.5,-169.166 94.5,-232.166c63,-63 140.389,-94.5 232.167,-94.5c91.777,-0 169.166,31.5 232.166,94.5c63,63 94.5,140.389 94.5,232.166c0,91.778 -31.5,169.167 -94.5,232.167c-63,63 -140.389,94.5 -232.166,94.5Zm-0,840c-129.111,0 -250.445,-24.5 -364,-73.5c-113.556,-49 -212.334,-115.5 -296.334,-199.5c-84,-84 -150.5,-182.778 -199.5,-296.333c-49,-113.556 -73.5,-234.889 -73.5,-364c0,-129.111 24.5,-250.445 73.5,-364c49,-113.556 115.5,-212.334 199.5,-296.334c84,-84 182.778,-150.5 296.334,-199.5c113.555,-49 234.889,-73.5 364,-73.5c129.111,0 250.444,24.5 364,73.5c113.555,49 212.333,115.5 296.333,199.5c84,84 150.5,182.778 199.5,296.334c49,113.555 73.5,234.889 73.5,364c0,129.111 -24.5,250.444 -73.5,364c-49,113.555 -115.5,212.333 -199.5,296.333c-84,84 -182.778,150.5 -296.333,199.5c-113.556,49 -234.889,73.5 -364,73.5Z";
   const PROFILE_PAGE_SCOPE_ATTR = "data-fmh-profile-page";
   const EMPTY_LIVE_STATUS_SNAPSHOT = Object.freeze({
     schema_version: "v1",
@@ -815,6 +819,19 @@
     return brand;
   }
 
+  function buildUiIcon(pathData, className, viewBox) {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", className);
+    svg.setAttribute("viewBox", viewBox);
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("focusable", "false");
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", pathData);
+    path.setAttribute("fill", "currentColor");
+    svg.appendChild(path);
+    return svg;
+  }
+
   function buildTopbar(pageContext = {}) {
     const bar = create("header", "fmh-topbar");
     const authState = pageContext.authState || getDefaultAuthState();
@@ -836,11 +853,8 @@
     streamSuites.rel = "noopener noreferrer";
     streamSuites.setAttribute("aria-label", "Open StreamSuites");
     streamSuites.setAttribute("title", "Open StreamSuites");
-    const streamSuitesIcon = create("img", "fmh-button-icon");
-    streamSuitesIcon.src = STREAMSUITES_ICON;
-    streamSuitesIcon.alt = "";
-    streamSuitesIcon.decoding = "async";
-    streamSuitesIcon.setAttribute("aria-hidden", "true");
+    streamSuites.dataset.iconSource = STREAMSUITES_ICON;
+    const streamSuitesIcon = buildUiIcon(STREAMSUITES_ICON_PATH, "fmh-button-icon fmh-button-icon-streamsuites", "0 0 1500 1500");
     streamSuites.appendChild(streamSuitesIcon);
 
     const login = create("a", "fmh-link-button fmh-account-button");
@@ -858,6 +872,7 @@
     }
     const loginAvatar = create("span", "fmh-account-avatar");
     if (isAuthenticated && authState.avatarUrl) {
+      loginAvatar.classList.add("has-image");
       const avatarImage = create("img");
       avatarImage.src = authState.avatarUrl;
       avatarImage.alt = "";
@@ -865,11 +880,9 @@
       avatarImage.setAttribute("aria-hidden", "true");
       loginAvatar.appendChild(avatarImage);
     } else {
-      const fallbackAvatar = create("img");
-      fallbackAvatar.src = PROFILE_ICON;
-      fallbackAvatar.alt = "";
-      fallbackAvatar.decoding = "async";
-      fallbackAvatar.setAttribute("aria-hidden", "true");
+      loginAvatar.classList.add("is-fallback");
+      login.dataset.iconSource = PROFILE_ICON;
+      const fallbackAvatar = buildUiIcon(PROFILE_ICON_PATH, "fmh-button-icon fmh-button-icon-profile", "0 0 2134 2134");
       loginAvatar.appendChild(fallbackAvatar);
     }
     login.append(loginAvatar, create("span", "fmh-account-label", "Login"));
@@ -899,7 +912,7 @@
     themeToggle.appendChild(toggleTrack);
     themeToggle.addEventListener("click", toggleTheme);
 
-    actions.append(live, streamSuites, login, themeToggle);
+    actions.append(streamSuites, login, themeToggle, live);
     bar.append(brand, actions);
     return bar;
   }
@@ -974,6 +987,7 @@
     identity.appendChild(copy);
     head.appendChild(identity);
 
+    const rail = create("div", "fmh-showcase-rail");
     const meta = create("div", "fmh-showcase-meta");
     [roleLabel(profile.role), tierLabel(profile.tier), ...buildLivePlatformSummary(profile)].filter(Boolean).forEach((item) => {
       meta.appendChild(create("span", "", item));
@@ -997,7 +1011,9 @@
       actions.appendChild(openStreamSuites);
     }
 
-    content.append(eyebrow, head, meta, actions);
+    rail.append(meta, actions);
+    head.appendChild(rail);
+    content.append(eyebrow, head);
     media.appendChild(content);
     slide.appendChild(media);
     return slide;
@@ -1060,13 +1076,13 @@
     return section;
   }
 
-  function buildDirectoryDiscoveryStrip(eligibleCount, liveCount) {
-    const strip = create("section", "fmh-discovery-strip");
+  function buildDirectoryIntro(eligibleCount, liveCount) {
+    const strip = create("section", "fmh-directory-intro fmh-panel");
     const copy = create("div", "fmh-discovery-copy");
     copy.append(
       create("span", "fmh-hero-kicker", "findmehere.live"),
       create("h1", "", "Discover creators through share-first public pages."),
-      create("p", "", "Browse the live-priority slideshow, jump into the directory, and scan profiles without the older bulky hero card stack.")
+      create("p", "", "Browse the live-priority slideshow first, then move straight into directory search, view toggles, and A-Z filters without the older bulky hero stack.")
     );
 
     const stats = create("div", "fmh-discovery-stats");
@@ -1274,7 +1290,7 @@
     updateDirectoryStateUrl(state);
 
     const { shell, main } = buildShellFrame({ page: "directory", authState: state.authState });
-    main.append(buildDirectoryShowcase(eligibleProfiles), buildDirectoryDiscoveryStrip(eligibleProfiles.length, liveCount));
+    main.append(buildDirectoryIntro(eligibleProfiles.length, liveCount), buildDirectoryShowcase(eligibleProfiles));
 
     const section = create("section", "");
     section.id = "directory";

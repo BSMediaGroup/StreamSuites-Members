@@ -361,7 +361,7 @@ body.findmehere-page input {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  width: 100vw;
+  width: auto;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
   padding: 8px max(18px, calc((100vw - var(--fmh-max)) / 2 + 18px));
@@ -456,6 +456,8 @@ body.findmehere-page input {
 
 .fmh-topbar-actions {
   justify-content: flex-end;
+  margin-left: auto;
+  flex-wrap: nowrap;
 }
 
 .fmh-button,
@@ -735,8 +737,8 @@ body.findmehere-page input {
 
 .fmh-directory-toolbar {
   display: grid;
-  gap: 16px;
-  margin: 24px 0 12px;
+  gap: 14px;
+  margin: 18px 0 10px;
 }
 
 .fmh-directory-toolbar h2,
@@ -1239,7 +1241,7 @@ body.findmehere-page input {
 }
 
 .fmh-footer-shell {
-  width: 100vw;
+  width: auto;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
   border-top: 1px solid var(--fmh-footer-border);
@@ -1499,7 +1501,7 @@ body.findmehere-page input {
 
 .fmh-topbar-actions {
   gap: 9px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .fmh-icon-button {
@@ -1513,7 +1515,10 @@ body.findmehere-page input {
   width: 18px;
   height: 18px;
   display: block;
-  opacity: 0.9;
+  color: currentColor;
+  fill: currentColor;
+  flex: 0 0 auto;
+  opacity: 0.96;
 }
 
 .fmh-account-button {
@@ -1529,7 +1534,9 @@ body.findmehere-page input {
   place-items: center;
   border-radius: 999px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.08);
+  color: currentColor;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
 }
 
 .fmh-account-avatar img {
@@ -1539,15 +1546,33 @@ body.findmehere-page input {
   display: block;
 }
 
+.fmh-account-avatar.is-fallback .fmh-button-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.fmh-account-avatar.has-image {
+  background: transparent;
+  border-color: transparent;
+}
+
 .fmh-account-label {
   line-height: 1;
+}
+
+.fmh-directory-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) auto auto;
+  align-items: end;
+  gap: 18px;
+  margin-top: 16px;
 }
 
 .fmh-showcase {
   position: relative;
   overflow: hidden;
   width: 100vw;
-  margin: 16px calc(50% - 50vw) 0;
+  margin: 2px calc(50% - 50vw) 0;
   padding: 0 max(18px, calc((100vw - var(--fmh-max)) / 2 + 18px));
 }
 
@@ -1573,8 +1598,8 @@ body.findmehere-page input {
 .fmh-showcase-media {
   --fmh-showcase-accent: rgba(223, 61, 75, 0.44);
   position: relative;
-  min-height: clamp(320px, 42vw, 520px);
-  padding: clamp(22px, 3vw, 34px);
+  min-height: clamp(320px, 38vw, 468px);
+  padding: clamp(18px, 2.6vw, 28px);
   display: flex;
   align-items: end;
   background:
@@ -1599,9 +1624,16 @@ body.findmehere-page input {
 .fmh-showcase-content {
   position: relative;
   z-index: 1;
-  width: min(100%, 760px);
+  width: min(100%, 980px);
   display: grid;
-  gap: 18px;
+  gap: 14px;
+  padding: clamp(18px, 2.2vw, 24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(8, 10, 14, 0.42), rgba(8, 10, 14, 0.72)),
+    rgba(8, 10, 14, 0.32);
+  backdrop-filter: blur(10px);
 }
 
 .fmh-showcase-eyebrow,
@@ -1622,13 +1654,18 @@ body.findmehere-page input {
 .fmh-showcase-head,
 .fmh-showcase-identity {
   display: flex;
-  align-items: end;
-  gap: 18px;
+  align-items: stretch;
+  gap: 16px;
+}
+
+.fmh-showcase-head {
+  justify-content: space-between;
+  gap: 22px;
 }
 
 .fmh-showcase-copy {
   display: grid;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
 }
 
@@ -1656,8 +1693,9 @@ body.findmehere-page input {
 }
 
 .fmh-showcase-copy p:last-child {
-  max-width: 58ch;
+  max-width: 52ch;
   color: rgba(238, 243, 250, 0.86);
+  line-height: 1.55;
 }
 
 .fmh-showcase-meta {
@@ -1681,9 +1719,26 @@ body.findmehere-page input {
   text-transform: uppercase;
 }
 
+.fmh-showcase-rail {
+  display: grid;
+  align-content: end;
+  justify-items: start;
+  gap: 12px;
+  min-width: min(100%, 240px);
+}
+
+.fmh-showcase-actions {
+  justify-content: flex-start;
+}
+
+.fmh-showcase-actions .fmh-button,
+.fmh-showcase-actions .fmh-link-button {
+  min-width: 156px;
+}
+
 .fmh-showcase-chrome {
   justify-content: space-between;
-  padding: 12px 8px 2px;
+  padding: 10px 8px 2px;
 }
 
 .fmh-showcase-arrow {
@@ -1707,14 +1762,6 @@ body.findmehere-page input {
   transform: scale(1.1);
   background: var(--fmh-red-bright);
   outline: none;
-}
-
-.fmh-discovery-strip {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) auto auto;
-  align-items: end;
-  gap: 18px;
-  padding: 0 2px;
 }
 
 .fmh-discovery-copy,
@@ -1860,7 +1907,7 @@ body.findmehere-page input {
 }
 
 @media (max-width: 980px) {
-  .fmh-discovery-strip {
+  .fmh-directory-intro {
     grid-template-columns: 1fr;
     align-items: start;
   }
@@ -1879,6 +1926,7 @@ body.findmehere-page input {
     width: auto;
     margin-left: auto;
     justify-content: flex-end;
+    flex-wrap: wrap;
   }
 
   .fmh-topbar-actions > * {
@@ -1890,7 +1938,7 @@ body.findmehere-page input {
   }
 
   .fmh-showcase-media {
-    min-height: 360px;
+    min-height: 356px;
   }
 
   .fmh-showcase-eyebrow,
@@ -1899,6 +1947,19 @@ body.findmehere-page input {
   .fmh-showcase-chrome {
     align-items: start;
     justify-content: start;
+  }
+
+  .fmh-showcase-content,
+  .fmh-showcase-head {
+    gap: 14px;
+  }
+
+  .fmh-showcase-head {
+    display: grid;
+  }
+
+  .fmh-showcase-rail {
+    min-width: 0;
   }
 
   .fmh-showcase-title h2 {
@@ -1928,6 +1989,62 @@ body.findmehere-page input {
     margin-top: 12px;
   }
 
+  .fmh-topbar {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .fmh-topbar-actions {
+    width: 100%;
+    margin-left: 0;
+    gap: 6px;
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    justify-content: end;
+    justify-items: end;
+    align-items: center;
+    flex-wrap: nowrap;
+  }
+
+  .fmh-icon-button {
+    width: 36px;
+    min-width: 36px;
+  }
+
+  .fmh-account-button {
+    min-width: 36px;
+    padding-inline: 8px;
+  }
+
+  .fmh-theme-toggle {
+    width: 60px;
+    min-width: 60px;
+  }
+
+  .fmh-theme-toggle-track {
+    height: 30px;
+  }
+
+  .fmh-theme-toggle-thumb {
+    width: 22px;
+    height: 22px;
+  }
+
+  .fmh-theme-toggle[data-theme-current="light"] .fmh-theme-toggle-thumb {
+    transform: translate(24px, -50%);
+  }
+
+  .fmh-topbar-actions > .fmh-button-primary {
+    min-height: 34px;
+    grid-column: 1 / -1;
+    justify-self: end;
+    padding-inline: 12px;
+    font-size: 0.75rem;
+  }
+
   .fmh-showcase-viewport {
     border-radius: 24px;
   }
@@ -1939,6 +2056,8 @@ body.findmehere-page input {
 
   .fmh-showcase-content {
     gap: 14px;
+    padding: 16px;
+    border-radius: 22px;
   }
 
   .fmh-showcase-actions .fmh-button,
