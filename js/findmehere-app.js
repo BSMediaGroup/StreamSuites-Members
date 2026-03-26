@@ -11,6 +11,7 @@
   const FMH_ICON_LOGO = "/assets/logos/fmhlogo.png";
   const STREAMSUITES_ICON = "/assets/icons/ui/streamsuitesicon.svg";
   const PROFILE_ICON = "/assets/icons/ui/profile.svg";
+  const CUSTOM_LINK_FALLBACK_ICON = "/assets/icons/ui/portal.svg";
   const STREAMSUITES_ICON_PATH =
     "M279.72,524.79l348.297,-361.939l777.557,0l-345.77,360.646l-201.345,-0l-289.309,302.733l-289.43,0l0,-301.44Zm940.56,450.42l-348.297,361.939l-777.557,-0l345.77,-360.646l201.345,0l289.309,-302.733l289.43,-0l-0,301.44Z";
   const PROFILE_ICON_PATH =
@@ -352,6 +353,49 @@
       .filter((item) => item.network && item.url);
   }
 
+  function isSupportedCustomLinkIcon(value) {
+    const source = String(value || "").trim();
+    if (!source) return false;
+    if (source.toLowerCase().startsWith("data:image/")) return true;
+    const path = source.startsWith("/")
+      ? source
+      : (() => {
+          try {
+            const parsed = new URL(source);
+            if (!/^https?:$/i.test(parsed.protocol)) return "";
+            return parsed.pathname || "";
+          } catch (_error) {
+            return "";
+          }
+        })();
+    const loweredPath = String(path || "").toLowerCase();
+    return [".svg", ".png", ".webp", ".gif", ".jpg", ".jpeg"].some((ext) => loweredPath.endsWith(ext));
+  }
+
+  function normalizeCustomLinks(value) {
+    if (!Array.isArray(value)) return [];
+    return value
+      .map((item) => ({
+        label: String(item?.label || item?.title || item?.name || "").trim(),
+        url: String(item?.url || item?.href || item?.destination || "").trim(),
+        icon_url: String(item?.icon_url || item?.iconUrl || item?.icon || item?.image_url || item?.imageUrl || item?.image || "").trim(),
+      }))
+      .filter((item) => item.label && item.url)
+      .slice(0, 8);
+  }
+
+  function resolveCustomLinkIcon(item) {
+    return isSupportedCustomLinkIcon(item?.icon_url) ? item.icon_url : CUSTOM_LINK_FALLBACK_ICON;
+  }
+
+  function applyImageFallback(image, fallback) {
+    if (!(image instanceof HTMLImageElement) || !fallback) return;
+    image.addEventListener("error", () => {
+      if (image.src === fallback) return;
+      image.src = fallback;
+    }, { once: true });
+  }
+
   function toTitle(value) {
     return String(value || "")
       .trim()
@@ -658,6 +702,7 @@
       cover_image_url: pickFirstString(profile?.cover_image_url, profile?.banner_image_url, fallback?.cover_image_url, fallback?.banner_image_url) || FALLBACK_COVER,
       background_image_url: pickFirstString(profile?.background_image_url, fallback?.background_image_url),
       social_links: normalizeSocialLinks(profile?.social_links),
+      custom_links: normalizeCustomLinks(profile?.custom_links || profile?.customLinks || fallback?.custom_links || fallback?.customLinks),
       is_listed: explicitListed === false ? false : profile?.listed === false ? false : profile?.community_listed === false ? false : true,
       is_anonymous: profile?.is_anonymous === true,
       account_status: String(profile?.account_status || profile?.status || fallback?.account_status || "").trim().toLowerCase(),
@@ -700,7 +745,8 @@
       profile.tier,
       liveStatus?.providerLabel,
       liveStatus?.title,
-      ...profile.social_links.map((item) => `${item.network} ${item.url}`)
+      ...profile.social_links.map((item) => `${item.network} ${item.url}`),
+      ...profile.custom_links.map((item) => `${item.label} ${item.url}`)
     ].join(" ").toLowerCase();
     return haystack.includes(needle);
   }
@@ -741,6 +787,7 @@
     if (profile?.streamsuites_profile_url) score += 2;
     if (profile?.bio) score += 1;
     if (Array.isArray(profile?.social_links) && profile.social_links.length) score += 1;
+    if (Array.isArray(profile?.custom_links) && profile.custom_links.length) score += 1;
     return score;
   }
 
@@ -1502,6 +1549,28 @@
     return link;
   }
 
+  function buildCustomLinkItem(item) {
+    const link = create("a", "fmh-social-item fmh-social-item-custom");
+    link.href = item.url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+
+    const iconWrap = create("span", "fmh-social-item-icon");
+    const icon = create("img");
+    icon.src = resolveCustomLinkIcon(item);
+    icon.alt = "";
+    icon.decoding = "async";
+    icon.loading = "lazy";
+    applyImageFallback(icon, CUSTOM_LINK_FALLBACK_ICON);
+    iconWrap.appendChild(icon);
+
+    const copy = create("span", "fmh-social-item-copy");
+    copy.append(create("strong", "", item.label), create("p", "", item.url));
+
+    link.append(iconWrap, copy);
+    return link;
+  }
+
   // Keep advanced profile CSS on a short leash: only approved local selectors and non-layout-breaking properties.
   function buildScopedProfileCustomCss(cssText) {
     const source = String(cssText || "").trim();
@@ -1600,7 +1669,7 @@
     if (theme.buttonColor) route.style.setProperty("--fmh-profile-button", theme.buttonColor);
     if (theme.imageVisibility?.showBackground !== false && profile.background_image_url) {
       route.classList.add("has-profile-background");
-      route.style.setProperty("--fmh-profile-background-image", `url("${profile.background_image_url}")`);
+      route.style.setProperty("--fmh-profile-background-image", `url(${JSON.stringify(profile.background_image_url)})`);
     }
 
     const scopedCss = buildScopedProfileCustomCss(theme.customCss);
@@ -1706,7 +1775,11 @@
     const socialList = create("div", "fmh-social-list");
     if (profile.social_links.length) {
       profile.social_links.forEach((item) => socialList.appendChild(buildLinkItem(item)));
-    } else {
+    }
+    if (profile.custom_links.length) {
+      profile.custom_links.forEach((item) => socialList.appendChild(buildCustomLinkItem(item)));
+    }
+    if (!profile.social_links.length && !profile.custom_links.length) {
       const empty = create("div", "fmh-empty");
       empty.append(create("h2", "", "Links coming soon"), create("p", "", "This FindMeHere page is active, but no public platform links are available in the current profile payload yet."));
       socialList.appendChild(empty);

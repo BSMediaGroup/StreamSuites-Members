@@ -4,6 +4,18 @@
 
 Packaged / released and no longer the active pending bucket. Preserve new notes for the open `0.4.8-alpha` section below.
 
+## FindMeHere Background Visibility + Custom Links Render - 2026-03-26
+
+- The live FindMeHere profile shell now applies saved public-profile background images in a visibly effective way by strengthening the route background layer and tuning panel translucency, fixing the real-world issue where customized backgrounds were technically present but visually lost behind mostly opaque content blocks.
+- FindMeHere profile pages now render creator-configured custom links inside the existing action/link area using either the saved per-link icon or the shared portal fallback icon, while keeping the existing primary CTA treatment and empty-state behavior intact when no extra links are present.
+- The public profile normalization/search path now carries those custom links through hydration so the live surface, page rendering, and related client-side profile handling all stay aligned to the same authoritative contract.
+
+### Files / Areas Touched
+
+- `js/findmehere-app.js`
+- `css/findmehere.css`
+- `BUMP_NOTES.md`
+
 ## Cross-Repo README Architecture Alignment - 2026-03-21
 
 - The FindMeHere README now includes a repo-scoped Mermaid flowchart, aligned wording around directory-first routing and runtime/Auth authority, refreshed cross-repo references, and a normalized tree using current branch characters.
