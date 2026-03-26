@@ -1,12 +1,12 @@
 (() => {
-  const ROLE_ICON_MAP = Object.freeze({
-    admin: "/assets/icons/tierbadge-admin.svg"
-  });
-
-  const TIER_ICON_MAP = Object.freeze({
+  const BADGE_ICON_MAP = Object.freeze({
+    admin: "/assets/icons/tierbadge-admin.svg",
     core: "/assets/icons/tierbadge-core.svg",
     gold: "/assets/icons/tierbadge-gold.svg",
-    pro: "/assets/icons/tierbadge-pro.svg"
+    pro: "/assets/icons/tierbadge-pro.svg",
+    founder: "/assets/icons/founder-gold.svg",
+    moderator: "/assets/icons/modgavel-blue.svg",
+    developer: "/assets/icons/dev-green.svg"
   });
 
   const SOCIAL_ICON_MAP = Object.freeze({
@@ -56,6 +56,41 @@
     const tier = String(value || "").trim().toLowerCase();
     if (tier === "gold" || tier === "pro") return tier;
     return "core";
+  }
+
+  function normalizeBadgeKey(value) {
+    const normalized = String(value || "").trim().toLowerCase();
+    return BADGE_ICON_MAP[normalized] ? normalized : "";
+  }
+
+  function normalizeAuthoritativeBadges(value, accountType, tier) {
+    if (Array.isArray(value) && value.length) {
+      return value
+        .map((badge) => {
+          if (!badge || typeof badge !== "object") return null;
+          const key = normalizeBadgeKey(badge.key || badge.icon_key || badge.iconKey || badge.value);
+          if (!key) return null;
+          return {
+            key,
+            kind: String(badge.kind || (key === "admin" ? "role" : "entitlement")).trim().toLowerCase(),
+            value: key,
+            label: String(badge.label || badge.title || key).trim()
+          };
+        })
+        .filter(Boolean);
+    }
+    const role = accountType === "ADMIN" ? "admin" : accountType === "CREATOR" ? "creator" : "viewer";
+    const badges = [];
+    if (role === "admin") {
+      badges.push({ key: "admin", kind: "role", value: "admin", label: "Admin" });
+      badges.push({ key: normalizeTierForUi(tier), kind: "tier", value: normalizeTierForUi(tier), label: normalizeTierForUi(tier).toUpperCase() });
+      return badges;
+    }
+    if (role === "creator") {
+      const tierKey = normalizeTierForUi(tier);
+      badges.push({ key: tierKey, kind: "tier", value: tierKey, label: tierKey.toUpperCase() });
+    }
+    return badges;
   }
 
   function roleLabel(role) {
@@ -135,18 +170,12 @@
 
   function createBadgeIcon(type, value) {
     const icon = create("img", "badge-icon");
-    const normalized = String(value || "").trim().toLowerCase();
-    if (type === "tier") {
-      icon.src = TIER_ICON_MAP[normalized] || TIER_ICON_MAP.core;
-      icon.alt = `${normalized || "core"} tier`;
-      icon.classList.add("badge-icon-tier", "ss-tier-badge");
-      icon.setAttribute("data-ss-badge-kind", "tier");
-      return icon;
-    }
-    icon.src = ROLE_ICON_MAP[normalized] || ROLE_ICON_MAP.admin;
-    icon.alt = `${normalized || "viewer"} role`;
-    icon.classList.add("badge-icon-role", "ss-role-badge");
-    icon.setAttribute("data-ss-badge-kind", "role");
+    const normalized = normalizeBadgeKey(value);
+    icon.src = BADGE_ICON_MAP[normalized] || BADGE_ICON_MAP.core;
+    icon.alt = `${normalized || "badge"} badge`;
+    icon.classList.add(["core", "gold", "pro"].includes(normalized) ? "badge-icon-tier" : "badge-icon-role");
+    icon.classList.add(["core", "gold", "pro"].includes(normalized) ? "ss-tier-badge" : "ss-role-badge");
+    icon.setAttribute("data-ss-badge-kind", ["core", "gold", "pro"].includes(normalized) ? "tier" : "role");
     return icon;
   }
 
@@ -155,12 +184,13 @@
     const row = create("span", "creator-badges ss-role-badges");
     row.setAttribute("data-ss-role-badge", "");
     const role = normalizeRoleForUi(profile?.role);
-    const tier = normalizeTierForUi(profile?.tier);
-    if (role === "admin") {
-      row.appendChild(createBadgeIcon("role", "admin"));
-    } else if (role === "creator") {
-      row.appendChild(createBadgeIcon("tier", tier));
-    }
+    normalizeAuthoritativeBadges(
+      profile?.badges,
+      profile?.accountType || profile?.account_type || roleLabel(role),
+      profile?.tier
+    ).forEach((badge) => {
+      row.appendChild(createBadgeIcon(badge.kind, badge.key || badge.value));
+    });
 
     if (includeRoleChip) {
       row.appendChild(create("span", "badge-role-chip", roleLabel(role)));
@@ -395,6 +425,7 @@
     createIcon,
     normalizeRoleForUi,
     normalizeTierForUi,
+    normalizeAuthoritativeBadges,
     roleLabel,
     buildProfileHref,
     buildAvatar,

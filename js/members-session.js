@@ -142,13 +142,14 @@
 
   function buildAccountBadges(accountType, tier) {
     const role = accountType === "ADMIN" ? "admin" : accountType === "CREATOR" ? "creator" : "viewer";
-    const badges = [{ kind: "role-chip", value: role, label: window.StreamSuitesMembersUi.roleLabel(role) }];
+    const badges = [];
     if (role === "admin") {
-      badges.unshift({ kind: "role-icon", value: "admin" });
+      badges.push({ key: "admin", kind: "role", value: "admin", label: "Admin" });
+      badges.push({ key: normalizeTier(tier), kind: "tier", value: normalizeTier(tier), label: normalizeTier(tier).toUpperCase() });
       return badges;
     }
     if (role === "creator") {
-      badges.unshift({ kind: "tier-icon", value: normalizeTier(tier) });
+      badges.push({ key: normalizeTier(tier), kind: "tier", value: normalizeTier(tier), label: normalizeTier(tier).toUpperCase() });
     }
     return badges;
   }
@@ -217,7 +218,14 @@
       ).trim(),
       accountType,
       tier,
-      badges: buildAccountBadges(accountType, tier)
+      badges:
+        typeof window.StreamSuitesMembersUi?.normalizeAuthoritativeBadges === "function"
+          ? window.StreamSuitesMembersUi.normalizeAuthoritativeBadges(
+              payload?.findmehere_badges || payload?.findmehereBadges || payload?.badges,
+              accountType,
+              tier
+            )
+          : buildAccountBadges(accountType, tier)
     };
   }
 

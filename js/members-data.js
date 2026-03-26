@@ -251,13 +251,14 @@
   function buildBadges(role, tier) {
     const normalizedRole = role === "admin" ? "admin" : role === "creator" ? "creator" : "viewer";
     const tierValue = normalizeTier(tier);
-    const badges = [{ kind: "role-chip", value: normalizedRole, label: roleLabel(normalizedRole) }];
+    const badges = [];
     if (normalizedRole === "admin") {
-      badges.unshift({ kind: "role-icon", value: "admin" });
+      badges.push({ key: "admin", kind: "role", value: "admin", label: "Admin" });
+      badges.push({ key: tierValue, kind: "tier", value: tierValue, label: tierValue.toUpperCase() });
       return badges;
     }
     if (normalizedRole === "creator") {
-      badges.unshift({ kind: "tier-icon", value: tierValue });
+      badges.push({ key: tierValue, kind: "tier", value: tierValue, label: tierValue.toUpperCase() });
     }
     return badges;
   }
@@ -279,7 +280,14 @@
       role,
       accountType: normalizeAccountType(raw?.account_type || raw?.accountType, role),
       tier,
-      badges: buildBadges(role, tier),
+      badges:
+        typeof window.StreamSuitesMembersUi?.normalizeAuthoritativeBadges === "function"
+          ? window.StreamSuitesMembersUi.normalizeAuthoritativeBadges(
+              raw?.findmehere_badges || raw?.findmehereBadges || raw?.badges,
+              normalizeAccountType(raw?.account_type || raw?.accountType, role),
+              tier
+            )
+          : buildBadges(role, tier),
       bio: String(raw?.bio || raw?.summary || "").trim(),
       coverImageUrl: String(raw?.cover_image_url || raw?.coverImageUrl || FALLBACK_COVER).trim() || FALLBACK_COVER,
       socialLinks: normalizeSocialLinks(raw?.social_links || raw?.socialLinks),
@@ -377,7 +385,14 @@
       role,
       accountType,
       tier,
-      badges: buildBadges(role, tier),
+      badges:
+        typeof window.StreamSuitesMembersUi?.normalizeAuthoritativeBadges === "function"
+          ? window.StreamSuitesMembersUi.normalizeAuthoritativeBadges(
+              payload?.findmehere_badges || payload?.findmehereBadges || payload?.badges,
+              accountType,
+              tier
+            )
+          : buildBadges(role, tier),
       bio: String(payload?.bio || fallbackProfile?.bio || "").trim(),
       coverImageUrl:
         String(payload?.cover_image_url || payload?.coverImageUrl || fallbackProfile?.coverImageUrl || FALLBACK_COVER).trim() ||

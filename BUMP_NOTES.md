@@ -4,6 +4,21 @@
 
 Packaged / released and no longer the active pending bucket. Preserve new notes for the open `0.4.8-alpha` section below.
 
+## FindMeHere Badge Subset Alignment - 2026-03-26
+
+- Members and FindMeHere profile normalization now prefer the backend-authored `findmehere_badges` subset, with fallback only when older payloads still carry legacy badge shapes.
+- Members hovercards, shared badge render helpers, authenticated session normalization, and FindMeHere page rendering now resolve the authoritative badge keys against the local icon assets, while keeping moderator and developer badges out of the FindMeHere display path when the backend omits them.
+- This keeps FindMeHere and Members as contract consumers only and aligns the share-first surface to the runtime-owned badge visibility policy instead of local role/tier badge logic.
+
+### Files / Areas Touched
+
+- `js/members-ui.js`
+- `js/members-data.js`
+- `js/members-session.js`
+- `js/findmehere-app.js`
+- `assets/js/ss-profile-hovercard.js`
+- `BUMP_NOTES.md`
+
 ## FindMeHere Background Visibility + Custom Links Render - 2026-03-26
 
 - The live FindMeHere profile shell now applies saved public-profile background images in a visibly effective way by strengthening the route background layer and tuning panel translucency, fixing the real-world issue where customized backgrounds were technically present but visually lost behind mostly opaque content blocks.

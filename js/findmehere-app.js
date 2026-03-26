@@ -415,6 +415,42 @@
     return tier ? tier.toUpperCase() : "";
   }
 
+  function normalizeFindmeBadges(value, accountType, tier) {
+    const normalize = window.StreamSuitesMembersUi?.normalizeAuthoritativeBadges;
+    if (typeof normalize === "function") {
+      return normalize(value, accountType, tier);
+    }
+    return Array.isArray(value) ? value : [];
+  }
+
+  function badgeIconPath(key) {
+    const normalized = String(key || "").trim().toLowerCase();
+    const map = {
+      admin: "/assets/icons/tierbadge-admin.svg",
+      core: "/assets/icons/tierbadge-core.svg",
+      gold: "/assets/icons/tierbadge-gold.svg",
+      pro: "/assets/icons/tierbadge-pro.svg",
+      founder: "/assets/icons/founder-gold.svg"
+    };
+    return map[normalized] || "";
+  }
+
+  function buildBadgeStrip(profile) {
+    const badges = Array.isArray(profile?.badges) ? profile.badges : [];
+    if (!badges.length) return null;
+    const row = create("span", "creator-badges ss-role-badges fmh-badge-strip");
+    badges.forEach((badge) => {
+      const iconPath = badgeIconPath(badge?.key || badge?.value);
+      if (!iconPath) return;
+      const icon = create("img", "badge-icon");
+      icon.src = iconPath;
+      icon.alt = String(badge?.label || badge?.title || badge?.key || badge?.value || "badge").trim();
+      icon.classList.add(["core", "gold", "pro"].includes(String(badge?.key || badge?.value || "").trim().toLowerCase()) ? "badge-icon-tier" : "badge-icon-role");
+      row.appendChild(icon);
+    });
+    return row.childNodes.length ? row : null;
+  }
+
   function copyText(value, button) {
     const text = String(value || "").trim();
     if (!text) return Promise.resolve(false);
@@ -509,6 +545,8 @@
   }
 
   function normalizeSeedProfile(item) {
+    const accountType = String(item?.account_type || "").trim() || (String(item?.role || "").toLowerCase().includes("admin") ? "ADMIN" : String(item?.role || "").toLowerCase().includes("creator") ? "CREATOR" : "PUBLIC");
+    const tier = String(item?.tier || "").trim() || "core";
     return {
       slug: normalizeSlug(item?.public_slug || item?.slug),
       public_slug: normalizeSlug(item?.public_slug || item?.slug),
@@ -517,8 +555,9 @@
       display_name: String(item?.display_name || item?.public_slug || "").trim(),
       avatar_url: String(item?.avatar_url || "").trim(),
       role: String(item?.role || "").trim(),
-      account_type: String(item?.account_type || "").trim(),
-      tier: String(item?.tier || "").trim(),
+      account_type: accountType,
+      tier,
+      badges: normalizeFindmeBadges(item?.findmehere_badges || item?.findmehereBadges || item?.badges, accountType, tier),
       account_status: String(item?.account_status || item?.status || "").trim().toLowerCase(),
       streamsuites_profile_url: String(item?.streamsuites_profile_url || "").trim(),
       findmehere_enabled: item?.findmehere_enabled === false ? false : true,
@@ -688,6 +727,8 @@
     const explicitEnabled = profile?.findmehere_enabled;
     const explicitEligible = profile?.findmehere_eligible;
     const hasCanonicalSlug = Boolean(slug);
+    const accountType = String(profile?.account_type || fallback?.account_type || "").trim() || (String(profile?.role || fallback?.role || "").toLowerCase().includes("admin") ? "ADMIN" : String(profile?.role || fallback?.role || "").toLowerCase().includes("creator") ? "CREATOR" : "PUBLIC");
+    const tier = String(profile?.tier || fallback?.tier || "").trim();
     return {
       slug,
       public_slug: slug,
@@ -695,9 +736,14 @@
       user_code: String(profile?.user_code || fallback?.user_code || "").trim(),
       display_name: String(profile?.display_name || fallback?.display_name || slug).trim() || slug,
       avatar_url: String(profile?.avatar_url || profile?.avatar || fallback?.avatar_url || fallback?.avatar || "").trim(),
-      tier: String(profile?.tier || fallback?.tier || "").trim(),
+      tier,
       role: String(profile?.role || fallback?.role || "").trim(),
-      account_type: String(profile?.account_type || fallback?.account_type || "").trim(),
+      account_type: accountType,
+      badges: normalizeFindmeBadges(
+        profile?.findmehere_badges || profile?.findmehereBadges || profile?.badges || fallback?.findmehere_badges || fallback?.findmehereBadges || fallback?.badges,
+        accountType,
+        tier
+      ),
       bio: String(profile?.bio || "").trim(),
       cover_image_url: pickFirstString(profile?.cover_image_url, profile?.banner_image_url, fallback?.cover_image_url, fallback?.banner_image_url) || FALLBACK_COVER,
       background_image_url: pickFirstString(profile?.background_image_url, fallback?.background_image_url),
@@ -1036,6 +1082,8 @@
 
     const rail = create("div", "fmh-showcase-rail");
     const meta = create("div", "fmh-showcase-meta");
+    const badgeStrip = buildBadgeStrip(profile);
+    if (badgeStrip) meta.appendChild(badgeStrip);
     [roleLabel(profile.role), tierLabel(profile.tier), ...buildLivePlatformSummary(profile)].filter(Boolean).forEach((item) => {
       meta.appendChild(create("span", "", item));
     });
@@ -1731,6 +1779,8 @@
     if (liveBadge) titleRow.appendChild(liveBadge);
     title.append(titleRow, create("p", "", `@${profile.slug}`));
     const meta = create("div", "fmh-profile-meta");
+    const badgeStrip = buildBadgeStrip(profile);
+    if (badgeStrip) meta.appendChild(badgeStrip);
     [roleLabel(profile.role), tierLabel(profile.tier), ...getPrimaryPlatforms(profile)].filter(Boolean).forEach((item) => meta.appendChild(create("span", "", item)));
     title.appendChild(meta);
     if (profile.render_theme?.imageVisibility?.showAvatar !== false) {
