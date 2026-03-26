@@ -64,8 +64,9 @@
   }
 
   function normalizeAuthoritativeBadges(value, accountType, tier) {
+    let normalized = [];
     if (Array.isArray(value) && value.length) {
-      return value
+      normalized = value
         .map((badge) => {
           if (!badge || typeof badge !== "object") return null;
           const key = normalizeBadgeKey(badge.key || badge.icon_key || badge.iconKey || badge.value);
@@ -79,18 +80,17 @@
         })
         .filter(Boolean);
     }
-    const role = accountType === "ADMIN" ? "admin" : accountType === "CREATOR" ? "creator" : "viewer";
-    const badges = [];
-    if (role === "admin") {
-      badges.push({ key: "admin", kind: "role", value: "admin", label: "Admin" });
-      badges.push({ key: normalizeTierForUi(tier), kind: "tier", value: normalizeTierForUi(tier), label: normalizeTierForUi(tier).toUpperCase() });
-      return badges;
+    if (!normalized.length) {
+      const role = accountType === "ADMIN" ? "admin" : accountType === "CREATOR" ? "creator" : "viewer";
+      if (role === "admin") {
+        normalized = [{ key: "admin", kind: "role", value: "admin", label: "Admin" }];
+      } else if (role === "creator") {
+        const tierKey = normalizeTierForUi(tier);
+        normalized = [{ key: tierKey, kind: "tier", value: tierKey, label: tierKey.toUpperCase() }];
+      }
     }
-    if (role === "creator") {
-      const tierKey = normalizeTierForUi(tier);
-      badges.push({ key: tierKey, kind: "tier", value: tierKey, label: tierKey.toUpperCase() });
-    }
-    return badges;
+    const hasAdminBadge = normalized.some((badge) => badge?.key === "admin");
+    return normalized.filter((badge) => !(hasAdminBadge && ["core", "gold", "pro"].includes(badge?.key)));
   }
 
   function roleLabel(role) {

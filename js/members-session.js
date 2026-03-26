@@ -145,7 +145,6 @@
     const badges = [];
     if (role === "admin") {
       badges.push({ key: "admin", kind: "role", value: "admin", label: "Admin" });
-      badges.push({ key: normalizeTier(tier), kind: "tier", value: normalizeTier(tier), label: normalizeTier(tier).toUpperCase() });
       return badges;
     }
     if (role === "creator") {

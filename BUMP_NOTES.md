@@ -4,6 +4,19 @@
 
 Packaged / released and no longer the active pending bucket. Preserve new notes for the open `0.4.8-alpha` section below.
 
+## FindMeHere Admin Badge Priority Alignment - 2026-03-27
+
+- Members and FindMeHere fallback badge builders now stop emitting creator-tier icons for admin accounts, and the shared badge normalizers also strip stale admin-plus-tier combinations when older payloads still carry them.
+- This keeps FindMeHere within the existing allowed badge subset while ensuring admin accounts show the Admin badge rather than a redundant creator-tier badge, without reintroducing moderator or developer badges on that share-first surface.
+
+### Files / Areas Touched
+
+- `js/members-ui.js`
+- `js/members-data.js`
+- `js/members-session.js`
+- `assets/js/ss-profile-hovercard.js`
+- `BUMP_NOTES.md`
+
 ## FindMeHere Badge Subset Alignment - 2026-03-26
 
 - Members and FindMeHere profile normalization now prefer the backend-authored `findmehere_badges` subset, with fallback only when older payloads still carry legacy badge shapes.
