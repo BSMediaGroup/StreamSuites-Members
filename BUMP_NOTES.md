@@ -195,3 +195,23 @@ Open bucket for future work only. Do not add new `0.4.8-alpha` prep notes into t
 
 - A very narrow mobile width still warrants live-device QA because the header now uses a more constrained fallback layout there; the required order and CTA priority are preserved, but small-browser chrome differences should still be checked in-device.
 - The icon-color fix is now robust for the two affected header controls because it uses inline SVGs, but any future shared-button icon work should follow the same pattern instead of reintroducing image-based SVG coloring.
+
+### Task 3P - Developer Tier + Badge Surface Matrix - 2026-03-28
+
+#### Technical Notes
+
+- Members-side badge consumers now stop suppressing backend badge combinations locally and prefer the backend profile-card/directory projections where available.
+- Hovercard badge fallback logic now accepts the stored `developer` tier cleanly instead of collapsing it back to Core when a fallback tier badge must be inferred.
+
+#### Human-Readable Notes
+
+- Directory cards and hovercards now align more closely with the backend badge visibility rules instead of second-guessing them in the client.
+
+#### Files / Areas Touched
+
+- `js/members-ui.js`
+- `assets/js/ss-profile-hovercard.js`
+
+#### Risks / Follow-Ups
+
+- Any remaining member-surface badge renderer that still falls back to local assumptions should be moved onto the backend surface payload in the same way before treating the migration as complete.

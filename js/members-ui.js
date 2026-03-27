@@ -54,7 +54,7 @@
 
   function normalizeTierForUi(value) {
     const tier = String(value || "").trim().toLowerCase();
-    if (tier === "gold" || tier === "pro") return tier;
+    if (tier === "gold" || tier === "pro" || tier === "developer") return tier;
     return "core";
   }
 
@@ -89,8 +89,7 @@
         normalized = [{ key: tierKey, kind: "tier", value: tierKey, label: tierKey.toUpperCase() }];
       }
     }
-    const hasAdminBadge = normalized.some((badge) => badge?.key === "admin");
-    return normalized.filter((badge) => !(hasAdminBadge && ["core", "gold", "pro"].includes(badge?.key)));
+    return normalized;
   }
 
   function roleLabel(role) {
@@ -185,7 +184,9 @@
     row.setAttribute("data-ss-role-badge", "");
     const role = normalizeRoleForUi(profile?.role);
     normalizeAuthoritativeBadges(
-      profile?.badges,
+      profile?.badge_state?.surface_badges?.directory ||
+        profile?.badge_state?.surface_badges?.public_surface ||
+        profile?.badges,
       profile?.accountType || profile?.account_type || roleLabel(role),
       profile?.tier
     ).forEach((badge) => {
@@ -242,7 +243,11 @@
     const bio = String(profile.bio || "").trim();
     const coverUrl = String(profile.coverImageUrl || profile.cover_image_url || "").trim();
     const socialLinks = window.StreamSuitesMembersData.normalizeSocialLinks(profile.socialLinks || profile.social_links);
-    const badges = Array.isArray(profile.badges) ? profile.badges : [];
+    const badges = Array.isArray(profile?.badge_state?.surface_badges?.profile_card)
+      ? profile.badge_state.surface_badges.profile_card
+      : Array.isArray(profile.badges)
+      ? profile.badges
+      : [];
     const liveStatus = getLiveStatus(profile);
 
     setHoverDataAttr(node, "data-ss-user-code", userCode);

@@ -131,7 +131,7 @@
 
   function normalizeTier(value) {
     const tier = safeText(value).toLowerCase();
-    if (tier === "gold" || tier === "pro") return tier;
+    if (tier === "gold" || tier === "pro" || tier === "developer") return tier;
     return "core";
   }
 
@@ -229,8 +229,7 @@
           return { key, kind, value: key };
         })
         .filter(Boolean);
-      const hasAdminBadge = normalized.some((badge) => badge?.key === "admin");
-      return normalized.filter((badge) => !(hasAdminBadge && ["core", "gold", "pro"].includes(badge?.key)));
+      return normalized;
     }
     return buildBadgesFromRole(role, tier);
   }
