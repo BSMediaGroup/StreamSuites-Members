@@ -237,6 +237,8 @@
   }
 
   function normalizeLiveStatus(raw) {
+    const helper = window.StreamSuitesMembersData?.normalizeLiveStatus;
+    if (typeof helper === "function") return helper(raw);
     if (!raw || typeof raw !== "object") return null;
     const activeStatus =
       raw?.active_status && typeof raw.active_status === "object"
@@ -264,7 +266,25 @@
     };
   }
 
+  function mergeLiveStatuses(primary, fallback) {
+    const helper = window.StreamSuitesMembersData?.mergeLiveStatuses;
+    if (typeof helper === "function") return helper(primary, fallback);
+    if (!primary?.isLive) return fallback?.isLive ? { ...fallback } : null;
+    if (!fallback?.isLive || primary.provider !== fallback.provider) return { ...primary };
+    return {
+      ...fallback,
+      ...primary,
+      title: primary.title || fallback.title || "",
+      url: primary.url || fallback.url || "",
+      viewerCount: primary.viewerCount ?? fallback.viewerCount ?? null,
+      startedAt: primary.startedAt || fallback.startedAt || "",
+      lastCheckedAt: primary.lastCheckedAt || fallback.lastCheckedAt || ""
+    };
+  }
+
   function buildLiveStatusMap(payload) {
+    const helper = window.StreamSuitesMembersData?.buildLiveStatusMap;
+    if (typeof helper === "function") return helper(payload);
     const map = new Map();
     const items = Array.isArray(payload?.creators) ? payload.creators : [];
     items.forEach((entry) => {
@@ -284,6 +304,8 @@
   }
 
   function resolveLiveStatus(profile, liveStatusMap) {
+    const helper = window.StreamSuitesMembersData?.resolveLiveStatus;
+    if (typeof helper === "function") return helper(profile, liveStatusMap);
     const hasEmbedded =
       Object.prototype.hasOwnProperty.call(profile || {}, "live_status") ||
       Object.prototype.hasOwnProperty.call(profile || {}, "liveStatus");
@@ -523,10 +545,30 @@
   }
 
   async function fetchLiveStatusMap() {
+    const helper = window.StreamSuitesMembersData?.loadAuthoritativeLiveMaps;
+    if (typeof helper === "function") {
+      try {
+        return await helper();
+      } catch (_error) {
+        // Fall through to the local compatibility path.
+      }
+    }
+
     try {
-      return buildLiveStatusMap(await fetchJson(LIVE_STATUS_PATH));
+      const payload = await fetchJson(LIVE_STATUS_PATH);
+      return {
+        liveStatusPayload: payload,
+        rumbleDiscoveryPayload: null,
+        rumbleDiscoveryMap: new Map(),
+        liveStatusMap: buildLiveStatusMap(payload)
+      };
     } catch (_error) {
-      return buildLiveStatusMap(EMPTY_LIVE_STATUS_SNAPSHOT);
+      return {
+        liveStatusPayload: EMPTY_LIVE_STATUS_SNAPSHOT,
+        rumbleDiscoveryPayload: null,
+        rumbleDiscoveryMap: new Map(),
+        liveStatusMap: buildLiveStatusMap(EMPTY_LIVE_STATUS_SNAPSHOT)
+      };
     }
   }
 
@@ -757,7 +799,7 @@
       findmehere_eligible: explicitEligible === false ? false : explicitEligible === true ? true : hasCanonicalSlug,
       findmehere_share_url: String(profile?.findmehere_share_url || fallback?.findmehere_share_url || (hasCanonicalSlug ? `${window.location.origin}/${slug}` : "")).trim(),
       can_edit: profile?.can_edit === true,
-      live_status: resolveLiveStatus(profile, liveStatusMap) || resolveLiveStatus(fallback, liveStatusMap),
+      live_status: mergeLiveStatuses(resolveLiveStatus(profile, liveStatusMap), resolveLiveStatus(fallback, liveStatusMap)),
       render_theme: normalizeProfileRenderOptions(profile, fallback)
     };
   }
@@ -1918,7 +1960,7 @@
 
     const slug = getRouteSlug();
     const liveRoute = isLiveRoute();
-    const [liveStatusMap, authState] = await Promise.all([
+    const [liveData, authState] = await Promise.all([
       fetchLiveStatusMap(),
       fetchFindMeHereAuthState()
     ]);
@@ -1926,7 +1968,7 @@
     try {
       if (liveRoute) {
         renderLiveDirectory(root, {
-          profiles: await loadDirectoryProfiles(liveStatusMap),
+          profiles: await loadDirectoryProfiles(liveData.liveStatusMap),
           authState,
           query: "",
           letter: "all",
@@ -1937,13 +1979,13 @@
       }
 
       if (slug) {
-        renderProfile(root, normalizePublicProfile(await fetchPublicProfile(slug), { slug }, liveStatusMap), slug, authState);
+        renderProfile(root, normalizePublicProfile(await fetchPublicProfile(slug), { slug }, liveData.liveStatusMap), slug, authState);
         trackPageVisit();
         return;
       }
 
       renderDirectory(root, {
-        profiles: await loadDirectoryProfiles(liveStatusMap),
+        profiles: await loadDirectoryProfiles(liveData.liveStatusMap),
         authState,
         ...getInitialDirectoryState()
       });

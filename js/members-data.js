@@ -2,7 +2,8 @@
   const DATA_PATHS = {
     profiles: "/data/profiles.json",
     notices: "/data/notices.json",
-    liveStatus: "/data/live-status.json"
+    liveStatus: ["/shared/state/live_status.json", "/data/live-status.json"],
+    rumbleDiscovery: ["/shared/state/rumble_live_discovery.json", "/data/rumble_live_discovery.json"]
   };
 
   const FALLBACK_AVATAR = "/assets/logos/logocircle.png";
@@ -47,6 +48,14 @@
     providers: [],
     creators: []
   });
+  const EMPTY_RUMBLE_DISCOVERY_SNAPSHOT = Object.freeze({
+    schema_version: "v1",
+    provider: "rumble",
+    generated_at: null,
+    scan: {},
+    streams: [],
+    creators: []
+  });
 
   let cachePromise = null;
 
@@ -64,6 +73,20 @@
     } catch (_error) {
       return fallback;
     }
+  }
+
+  async function loadJsonFromPaths(paths, fallback) {
+    const candidates = Array.isArray(paths) ? paths : [paths];
+    for (const path of candidates) {
+      try {
+        const response = await fetch(path, { cache: "no-store" });
+        if (!response.ok) continue;
+        return await response.json();
+      } catch (_error) {
+        // Try the next candidate.
+      }
+    }
+    return fallback;
   }
 
   function toTimestamp(value) {
@@ -184,11 +207,108 @@
     };
   }
 
-  function buildLiveStatusMap(payload) {
+  function normalizeRumbleDiscoveryStatus(raw) {
+    if (!raw || typeof raw !== "object" || raw?.is_live !== true) return null;
+    return {
+      isLive: true,
+      provider: "rumble",
+      providerLabel: "Rumble",
+      title: String(raw?.live_title || "").trim(),
+      url: String(raw?.live_url || raw?.channel_url || "").trim(),
+      viewerCount: parseViewerCount(raw?.viewer_count),
+      startedAt: String(raw?.started_at || "").trim(),
+      lastCheckedAt: String(raw?.last_checked_at || "").trim(),
+      channelUrl: String(raw?.channel_url || "").trim(),
+      channelSlug: String(raw?.channel_slug || "").trim(),
+      streamKey: String(raw?.stream_key || "").trim(),
+      numericVideoId: String(raw?.numeric_video_id || "").trim()
+    };
+  }
+
+  function mergeLiveStatuses(primary, fallback) {
+    if (!primary?.isLive) return fallback?.isLive ? { ...fallback } : null;
+    if (!fallback?.isLive || primary.provider !== fallback.provider) return { ...primary };
+    return {
+      ...fallback,
+      ...primary,
+      title: primary.title || fallback.title || "",
+      url: primary.url || fallback.url || "",
+      viewerCount: primary.viewerCount ?? fallback.viewerCount ?? null,
+      startedAt: primary.startedAt || fallback.startedAt || "",
+      lastCheckedAt: primary.lastCheckedAt || fallback.lastCheckedAt || "",
+      channelUrl: primary.channelUrl || fallback.channelUrl || "",
+      channelSlug: primary.channelSlug || fallback.channelSlug || "",
+      streamKey: primary.streamKey || fallback.streamKey || "",
+      numericVideoId: primary.numericVideoId || fallback.numericVideoId || ""
+    };
+  }
+
+  function buildRumbleDiscoveryMap(payload) {
+    const map = new Map();
+    const add = (entry) => {
+      const normalized = normalizeRumbleDiscoveryStatus(entry);
+      if (!normalized) return;
+      [
+        entry?.creator_id,
+        entry?.display_name,
+        entry?.channel_slug,
+        entry?.channel_url
+      ].forEach((value) => {
+        const key = normalizeUserCode(value, "");
+        if (key) map.set(key, normalized);
+      });
+    };
+
+    (Array.isArray(payload?.creators) ? payload.creators : []).forEach(add);
+    (Array.isArray(payload?.streams) ? payload.streams : []).forEach((entry) => {
+      const matched = entry?.matched_creator;
+      add({
+        creator_id: matched?.creator_id,
+        display_name: matched?.display_name,
+        channel_slug: entry?.channel?.slug || matched?.matched_value,
+        channel_url: entry?.channel?.canonical_url,
+        is_live: entry?.is_live === true,
+        live_title: entry?.title,
+        live_url: entry?.watch_url,
+        viewer_count: entry?.viewer_count,
+        started_at: entry?.started_at
+      });
+    });
+
+    return map;
+  }
+
+  function resolveRumbleDiscovery(raw, rumbleDiscoveryMap) {
+    const candidates = [
+      raw?.id,
+      raw?.creator_id,
+      raw?.creatorId,
+      raw?.public_slug,
+      raw?.publicSlug,
+      raw?.slug,
+      raw?.user_code,
+      raw?.userCode,
+      raw?.username,
+      raw?.display_name,
+      raw?.displayName,
+      raw?.name,
+      raw?.social_links?.rumble,
+      raw?.socialLinks?.rumble
+    ];
+    for (const candidate of candidates) {
+      const key = normalizeUserCode(candidate, "");
+      if (key && rumbleDiscoveryMap?.has(key)) {
+        return rumbleDiscoveryMap.get(key) || null;
+      }
+    }
+    return null;
+  }
+
+  function buildLiveStatusMap(payload, rumbleDiscoveryMap = null) {
     const map = new Map();
     const items = Array.isArray(payload?.creators) ? payload.creators : [];
     items.forEach((entry) => {
-      const normalized = normalizeLiveStatus(entry);
+      const normalized = mergeLiveStatuses(normalizeLiveStatus(entry), resolveRumbleDiscovery(entry, rumbleDiscoveryMap));
       if (!normalized) return;
       [
         entry?.creator_id,
@@ -208,12 +328,7 @@
     return Object.prototype.hasOwnProperty.call(raw, "live_status") || Object.prototype.hasOwnProperty.call(raw, "liveStatus");
   }
 
-  function resolveLiveStatus(raw, liveStatusMap) {
-    if (hasEmbeddedLiveStatus(raw)) {
-      return normalizeLiveStatus(raw?.live_status || raw?.liveStatus);
-    }
-    const direct = normalizeLiveStatus(raw);
-    if (direct) return direct;
+  function resolveMappedLiveStatus(raw, liveStatusMap) {
     const candidates = [
       raw?.id,
       raw?.creator_id,
@@ -235,6 +350,35 @@
       }
     }
     return null;
+  }
+
+  function resolveLiveStatus(raw, liveStatusMap, rumbleDiscoveryMap = null) {
+    if (hasEmbeddedLiveStatus(raw)) {
+      return mergeLiveStatuses(
+        mergeLiveStatuses(
+          normalizeLiveStatus(raw?.live_status || raw?.liveStatus),
+          resolveMappedLiveStatus(raw, liveStatusMap)
+        ),
+        resolveRumbleDiscovery(raw, rumbleDiscoveryMap)
+      );
+    }
+    const direct = mergeLiveStatuses(normalizeLiveStatus(raw), resolveRumbleDiscovery(raw, rumbleDiscoveryMap));
+    if (direct) return direct;
+    return mergeLiveStatuses(resolveMappedLiveStatus(raw, liveStatusMap), resolveRumbleDiscovery(raw, rumbleDiscoveryMap));
+  }
+
+  async function loadAuthoritativeLiveMaps() {
+    const [liveStatusPayload, rumbleDiscoveryPayload] = await Promise.all([
+      loadJsonFromPaths(DATA_PATHS.liveStatus, EMPTY_LIVE_STATUS_SNAPSHOT),
+      loadJsonFromPaths(DATA_PATHS.rumbleDiscovery, EMPTY_RUMBLE_DISCOVERY_SNAPSHOT)
+    ]);
+    const rumbleDiscoveryMap = buildRumbleDiscoveryMap(rumbleDiscoveryPayload);
+    return {
+      liveStatusPayload,
+      rumbleDiscoveryPayload,
+      rumbleDiscoveryMap,
+      liveStatusMap: buildLiveStatusMap(liveStatusPayload, rumbleDiscoveryMap)
+    };
   }
 
   function platformIconFor(platform) {
@@ -400,7 +544,7 @@
       isAnonymous: payload?.is_anonymous === true || payload?.anonymous === true || fallbackProfile?.isAnonymous === true,
       isListed: payload?.is_listed !== false && payload?.listed !== false && fallbackProfile?.isListed !== false,
       liveStatus: hasEmbeddedLiveStatus(payload)
-        ? normalizeLiveStatus(payload?.live_status || payload?.liveStatus)
+        ? mergeLiveStatuses(normalizeLiveStatus(payload?.live_status || payload?.liveStatus), fallbackProfile?.liveStatus || null)
         : fallbackProfile?.liveStatus || null
     };
   }
@@ -410,9 +554,9 @@
       cachePromise = Promise.all([
         loadJson(DATA_PATHS.profiles, { items: [] }),
         loadJson(DATA_PATHS.notices, { items: [] }),
-        loadJson(DATA_PATHS.liveStatus, EMPTY_LIVE_STATUS_SNAPSHOT)
-      ]).then(([profilesPayload, noticesPayload, liveStatusPayload]) => {
-        const profileState = buildProfiles(toArray(profilesPayload), buildLiveStatusMap(liveStatusPayload));
+        loadAuthoritativeLiveMaps()
+      ]).then(([profilesPayload, noticesPayload, liveData]) => {
+        const profileState = buildProfiles(toArray(profilesPayload), liveData.liveStatusMap);
         const notices = toArray(noticesPayload)
           .map((item, index) => normalizeNotice(item, profileState, index))
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -420,7 +564,8 @@
         return {
           ...profileState,
           notices,
-          liveStatus: liveStatusPayload,
+          liveStatus: liveData.liveStatusPayload,
+          rumbleDiscovery: liveData.rumbleDiscoveryPayload,
           helpers: {
             toTimestamp,
             toTitle,
@@ -440,6 +585,11 @@
     isValidUserCode,
     normalizeSocialLinks,
     normalizeLiveStatus,
+    mergeLiveStatuses,
+    buildRumbleDiscoveryMap,
+    buildLiveStatusMap,
+    resolveLiveStatus,
+    loadAuthoritativeLiveMaps,
     normalizeProfilePayload,
     resolveProfile,
     platformIconFor,

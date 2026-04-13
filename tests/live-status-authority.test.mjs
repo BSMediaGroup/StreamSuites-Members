@@ -1,0 +1,153 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
+import vm from "node:vm";
+
+const repoRoot = process.cwd();
+const membersDataSource = fs.readFileSync(path.join(repoRoot, "js/members-data.js"), "utf8");
+
+function instantiateMembersData(fetchImpl) {
+  const context = {
+    window: {},
+    fetch: fetchImpl,
+    console,
+    URL,
+    Map,
+    Set
+  };
+  vm.runInNewContext(membersDataSource, context, { filename: "members-data.js" });
+  return context.window.StreamSuitesMembersData;
+}
+
+function jsonResponse(payload, status = 200) {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    async json() {
+      return payload;
+    }
+  };
+}
+
+test("members authoritative live adapter enriches rumble entries from discovery metadata", async () => {
+  const api = instantiateMembersData(async (resource) => {
+    if (resource === "/shared/state/live_status.json") {
+      return jsonResponse({
+        schema_version: "v1",
+        generated_at: "2026-04-13T09:00:00Z",
+        creators: [
+          {
+            creator_id: "creator-1",
+            display_name: "Creator One",
+            is_live: true,
+            active_provider: "rumble",
+            active_status: {
+              provider: "rumble",
+              is_live: true,
+              live_title: "",
+              live_url: "",
+              viewer_count: null,
+              freshness: "fresh",
+              stale: false
+            },
+            freshness: "fresh",
+            stale: false
+          }
+        ]
+      });
+    }
+    if (resource === "/shared/state/rumble_live_discovery.json") {
+      return jsonResponse({
+        schema_version: "v1",
+        provider: "rumble",
+        creators: [
+          {
+            creator_id: "creator-1",
+            display_name: "Creator One",
+            is_live: true,
+            live_title: "Discovery Title",
+            live_url: "https://rumble.com/v123-discovery",
+            viewer_count: 44,
+            last_checked_at: "2026-04-13T08:45:00Z"
+          }
+        ]
+      });
+    }
+    return jsonResponse({ items: [] }, 404);
+  });
+
+  const liveData = await api.loadAuthoritativeLiveMaps();
+  const resolved = liveData.liveStatusMap.get("creator-1");
+  assert.equal(resolved?.provider, "rumble");
+  assert.equal(resolved?.title, "Discovery Title");
+  assert.equal(resolved?.url, "https://rumble.com/v123-discovery");
+  assert.equal(resolved?.viewerCount, 44);
+});
+
+test("members live adapter merges embedded live payloads with fallback export metadata", () => {
+  const api = instantiateMembersData(async () => jsonResponse({ items: [] }));
+  const merged = api.mergeLiveStatuses(
+    api.normalizeLiveStatus({
+      is_live: true,
+      active_provider: "rumble",
+      active_status: {
+        provider: "rumble",
+        is_live: true,
+        live_title: "",
+        live_url: "",
+        freshness: "fresh",
+        stale: false
+      },
+      freshness: "fresh",
+      stale: false
+    }),
+    {
+      isLive: true,
+      provider: "rumble",
+      providerLabel: "Rumble",
+      title: "Discovery Title",
+      url: "https://rumble.com/v123-discovery",
+      viewerCount: 44,
+      startedAt: "2026-04-13T08:30:00Z",
+      lastCheckedAt: "2026-04-13T08:45:00Z"
+    }
+  );
+
+  assert.equal(merged?.title, "Discovery Title");
+  assert.equal(merged?.url, "https://rumble.com/v123-discovery");
+  assert.equal(merged?.viewerCount, 44);
+});
+
+test("members live loader prefers shared runtime exports and keeps checked-in mirrors as fallback", async () => {
+  const calls = [];
+  const api = instantiateMembersData(async (resource) => {
+    calls.push(resource);
+    if (resource === "/shared/state/live_status.json") return jsonResponse({}, 404);
+    if (resource === "/data/live-status.json") {
+      return jsonResponse({
+        schema_version: "v1",
+        generated_at: "2026-04-13T09:00:00Z",
+        creators: []
+      });
+    }
+    if (resource === "/shared/state/rumble_live_discovery.json") return jsonResponse({}, 404);
+    if (resource === "/data/rumble_live_discovery.json") return jsonResponse({}, 404);
+    return jsonResponse({ items: [] });
+  });
+
+  const liveData = await api.loadAuthoritativeLiveMaps();
+  assert.equal(liveData.liveStatusPayload.generated_at, "2026-04-13T09:00:00Z");
+  assert.ok(calls.indexOf("/shared/state/live_status.json") !== -1);
+  assert.ok(calls.indexOf("/data/live-status.json") !== -1);
+  assert.ok(calls.indexOf("/shared/state/live_status.json") < calls.indexOf("/data/live-status.json"));
+});
+
+test("findmehere root shell loads the shared live adapter before the app and uses it for hydration", () => {
+  const indexHtml = fs.readFileSync(path.join(repoRoot, "index.html"), "utf8");
+  const appSource = fs.readFileSync(path.join(repoRoot, "js/findmehere-app.js"), "utf8");
+
+  assert.match(indexHtml, /<script src="\/js\/members-data\.js" defer><\/script>/);
+  assert.match(appSource, /loadAuthoritativeLiveMaps/);
+  assert.match(appSource, /mergeLiveStatuses/);
+});

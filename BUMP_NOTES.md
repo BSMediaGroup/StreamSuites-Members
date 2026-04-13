@@ -143,6 +143,31 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 Open bucket for future work only. Do not add new `0.4.8-alpha` prep notes into the released `0.4.2-alpha` section above.
 
+### FindMeHere Authoritative Live Status Downstream Pass - 2026-04-13
+
+### Technical Notes
+
+- Centralized the repo’s downstream live-state interpretation in `js/members-data.js` so FindMeHere now prefers `/shared/state/live_status.json`, keeps `data/live-status.json` only as a fallback mirror, and uses the same aggregate-live plus optional-Rumble-enrichment rules as the public site.
+- Added the small Rumble discovery adapter in `js/members-data.js` for `/shared/state/rumble_live_discovery.json`, but kept it strictly additive: it only fills missing watch URL, title, and viewer-count metadata for already-live aggregate entries and never overrides offline/stale aggregate truth.
+- Updated `index.html` to load `js/members-data.js` on the active FindMeHere SPA shell and changed `js/findmehere-app.js` to consume the shared loader/merge helpers so directory cards, `/live`, and root-slug profile pages all follow the same runtime-owned interpretation path.
+- Replaced the old “embedded live payload wins unconditionally” behavior on fetched public profiles with merge behavior, so sparse embedded profile live data can inherit richer runtime-export metadata instead of dropping the live destination link.
+- Added focused regression coverage in `tests/live-status-authority.test.mjs` for Rumble enrichment, merge behavior, shared-state fallback, and the shell wiring that now loads the shared members-data helper before the FindMeHere app.
+- No files were removed in this repo during this pass. The checked-in `data/live-status.json` mirror remains as the static fallback, but it is no longer treated as the main live-data source.
+
+### Human-Readable Notes
+
+- FindMeHere profile pages, directory cards, and `/live` now consume the real runtime live export path first and stay aligned with the public site’s live/offline rules.
+- When the runtime already exposes a Rumble watch destination through discovery, FindMeHere now surfaces that link on existing live UI instead of leaving creators marked live without a usable watch target.
+
+### Files / Areas Touched
+
+- `index.html`
+- `js/members-data.js`
+- `js/findmehere-app.js`
+- `tests/live-status-authority.test.mjs`
+- `README.md`
+- `BUMP_NOTES.md`
+
 ### Technical Notes
 
 - `js/findmehere-app.js` now builds the FindMeHere shell with page context, allowing the shared header to keep the default FindMeHere mark on directory/live surfaces while supporting profile-only creator branding overrides from future public-theme data when a header logo or brand text is present.

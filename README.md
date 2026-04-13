@@ -12,7 +12,7 @@ Standalone FindMeHere surface deployed to Cloudflare Pages at `https://findmeher
 
 - This repo is the share-first FindMeHere surface, not the canonical account or profile authority.
 - Canonical slug assignment, profile visibility, and FindMeHere eligibility remain runtime/Auth-owned in `StreamSuites`.
-- The repo consumes directory seed data, same-origin public profile hydration, and exported live-status payloads to render the directory, root-slug pages, and live view.
+- The repo consumes directory seed data, same-origin public profile hydration, and exported runtime live-status payloads to render the directory, root-slug pages, and live view.
 - Login, signup, and profile-management actions intentionally route users back to StreamSuites where account and profile authority live.
 
 ## Repo-Scoped Flowchart
@@ -45,7 +45,7 @@ flowchart TD
 - Same-origin public profile hydration runs through `functions/api/public/profile.js`.
 - Directory hydration starts from `data/findmehere-directory.json`, which carries canonical slug and FindMeHere surface fields from the authoritative runtime export.
 - Profile rendering is share-first: FindMeHere is the primary route and share action, while StreamSuites profile links are secondary outbound links when the authoritative payload provides them.
-- Live badges, live rings, and live banner treatment consume authoritative runtime live-status payloads rather than repo-local state.
+- Live badges, live rings, live-directory cards, and live banner treatment consume authoritative runtime `live_status` exports first, with optional Rumble discovery enrichment only when existing watch/title metadata is missing.
 - Login, signup, and profile-management flows intentionally send users back to StreamSuites where account and profile authority lives.
 
 ## Routing Notes
@@ -113,6 +113,8 @@ StreamSuites-Members/
 │   ├── members-toast.js
 │   ├── members-ui.js
 │   └── profile-app.js
+├── tests/
+│   └── live-status-authority.test.mjs
 ├── members/
 │   └── index.html
 ├── notices/
