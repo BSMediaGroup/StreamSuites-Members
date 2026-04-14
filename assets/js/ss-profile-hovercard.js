@@ -750,7 +750,7 @@
     const socialLinks = normalizeSocialLinks(profile?.social_links || profile?.socialLinks || fallback.socialLinks);
     const badges = normalizeBadges(profile?.badges, role, tier);
     const href = userCode ? `/community/profile.html?u=${encodeURIComponent(userCode)}` : fallback.profileHref;
-    const liveStatus = normalizeLiveStatus(profile?.live_status || profile?.liveStatus || fallback.liveStatus);
+    const liveStatus = normalizeLiveStatus(fallback.liveStatus);
     return {
       displayName,
       userCode,

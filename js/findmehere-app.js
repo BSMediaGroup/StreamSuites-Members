@@ -23,6 +23,7 @@
     providers: [],
     creators: []
   });
+  const AUTHORITATIVE_LIVE_PROVIDERS = new Set(["rumble"]);
   const RESERVED_SEGMENTS = new Set([
     "",
     "assets",
@@ -256,6 +257,7 @@
     }
 
     const provider = String(raw?.active_provider || raw?.activeProvider || activeStatus?.provider || "").trim().toLowerCase();
+    if (!AUTHORITATIVE_LIVE_PROVIDERS.has(provider)) return null;
     return {
       isLive: true,
       provider,
@@ -282,6 +284,11 @@
     };
   }
 
+  function enrichAuthoritativeLiveStatus(authoritative, discovery) {
+    if (!authoritative?.isLive) return null;
+    return mergeLiveStatuses(authoritative, discovery);
+  }
+
   function buildLiveStatusMap(payload) {
     const helper = window.StreamSuitesMembersData?.buildLiveStatusMap;
     if (typeof helper === "function") return helper(payload);
@@ -306,14 +313,6 @@
   function resolveLiveStatus(profile, liveStatusMap) {
     const helper = window.StreamSuitesMembersData?.resolveLiveStatus;
     if (typeof helper === "function") return helper(profile, liveStatusMap);
-    const hasEmbedded =
-      Object.prototype.hasOwnProperty.call(profile || {}, "live_status") ||
-      Object.prototype.hasOwnProperty.call(profile || {}, "liveStatus");
-    if (hasEmbedded) {
-      return normalizeLiveStatus(profile?.live_status || profile?.liveStatus);
-    }
-    const direct = normalizeLiveStatus(profile);
-    if (direct) return direct;
     const candidates = [
       profile?.slug,
       profile?.public_slug,
@@ -323,7 +322,7 @@
     ];
     for (const candidate of candidates) {
       const key = normalizeSlug(candidate);
-      if (key && liveStatusMap?.has(key)) return liveStatusMap.get(key) || null;
+      if (key && liveStatusMap?.has(key)) return enrichAuthoritativeLiveStatus(liveStatusMap.get(key) || null, null);
     }
     return null;
   }

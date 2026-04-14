@@ -85,38 +85,81 @@ test("members authoritative live adapter enriches rumble entries from discovery 
   assert.equal(resolved?.viewerCount, 44);
 });
 
-test("members live adapter merges embedded live payloads with fallback export metadata", () => {
+test("members authoritative live adapter does not create live state from discovery alone", () => {
   const api = instantiateMembersData(async () => jsonResponse({ items: [] }));
-  const merged = api.mergeLiveStatuses(
-    api.normalizeLiveStatus({
-      is_live: true,
-      active_provider: "rumble",
-      active_status: {
-        provider: "rumble",
+  const rumbleDiscoveryMap = api.buildRumbleDiscoveryMap({
+    creators: [
+      {
+        creator_id: "creator-1",
+        display_name: "Creator One",
         is_live: true,
-        live_title: "",
-        live_url: "",
-        freshness: "fresh",
-        stale: false
-      },
-      freshness: "fresh",
-      stale: false
-    }),
+        live_title: "Discovery Only",
+        live_url: "https://rumble.com/v123-discovery-only"
+      }
+    ]
+  });
+
+  const liveStatusMap = api.buildLiveStatusMap(
     {
-      isLive: true,
-      provider: "rumble",
-      providerLabel: "Rumble",
-      title: "Discovery Title",
-      url: "https://rumble.com/v123-discovery",
-      viewerCount: 44,
-      startedAt: "2026-04-13T08:30:00Z",
-      lastCheckedAt: "2026-04-13T08:45:00Z"
-    }
+      creators: [
+        {
+          creator_id: "creator-1",
+          display_name: "Creator One",
+          is_live: false,
+          active_provider: null,
+          active_status: null,
+          freshness: "fresh",
+          stale: false
+        }
+      ]
+    },
+    rumbleDiscoveryMap
   );
 
-  assert.equal(merged?.title, "Discovery Title");
-  assert.equal(merged?.url, "https://rumble.com/v123-discovery");
-  assert.equal(merged?.viewerCount, 44);
+  assert.equal(liveStatusMap.get("creator-1") || null, null);
+  assert.equal(api.resolveLiveStatus({ user_code: "creator-1" }, liveStatusMap, rumbleDiscoveryMap), null);
+});
+
+test("members authoritative live adapter suppresses non-rumble live providers for this phase", () => {
+  const api = instantiateMembersData(async () => jsonResponse({ items: [] }));
+  const resolved = api.normalizeLiveStatus({
+    is_live: true,
+    active_provider: "twitch",
+    active_status: {
+      provider: "twitch",
+      is_live: true,
+      freshness: "fresh",
+      stale: false
+    },
+    freshness: "fresh",
+    stale: false
+  });
+  assert.equal(resolved, null);
+});
+
+test("members authoritative live adapter ignores embedded live payloads when aggregate truth is absent", () => {
+  const api = instantiateMembersData(async () => jsonResponse({ items: [] }));
+  const resolved = api.resolveLiveStatus(
+    {
+      user_code: "creator-1",
+      live_status: {
+        is_live: true,
+        active_provider: "rumble",
+        active_status: {
+          provider: "rumble",
+          is_live: true,
+          live_title: "Embedded Sample",
+          freshness: "fresh",
+          stale: false
+        },
+        freshness: "fresh",
+        stale: false
+      }
+    },
+    new Map(),
+    new Map()
+  );
+  assert.equal(resolved, null);
 });
 
 test("members live loader prefers shared runtime exports and keeps checked-in mirrors as fallback", async () => {
@@ -149,5 +192,6 @@ test("findmehere root shell loads the shared live adapter before the app and use
 
   assert.match(indexHtml, /<script src="\/js\/members-data\.js" defer><\/script>/);
   assert.match(appSource, /loadAuthoritativeLiveMaps/);
-  assert.match(appSource, /mergeLiveStatuses/);
+  assert.match(appSource, /loadDirectoryProfiles\(liveData\.liveStatusMap\)/);
+  assert.doesNotMatch(appSource, /return normalizeLiveStatus\(profile\?\.live_status \|\| profile\?\.liveStatus\)/);
 });

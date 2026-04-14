@@ -143,6 +143,14 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 Open bucket for future work only. Do not add new `0.4.8-alpha` prep notes into the released `0.4.2-alpha` section above.
 
+## Members Rumble-Only Live Truth Cleanup - 2026-04-14
+
+- Replaced the remaining fake/sample live authority in `js/members-data.js` by removing embedded-profile live-state participation from `resolveLiveStatus(...)` and fetched-profile normalization, restricting renderable live providers to authoritative Rumble entries only, and keeping `rumble_live_discovery.json` strictly additive so it cannot create a `LIVE` state on its own.
+- Replaced the legacy FindMeHere compatibility behavior in `js/findmehere-app.js` so the local fallback no longer trusts embedded `live_status` payloads; `/live` and slug pages now stay downstream of the authoritative aggregate map that comes from `members-data.js`.
+- Replaced the hovercard fetch fallback in `assets/js/ss-profile-hovercard.js` so member-card hover state no longer rehydrates `LIVE` from fetched profile payload samples; it now only mirrors the runtime-backed card state already passed into the surface.
+- Removed the fake checked-in Twitch sample from `data/live-status.json` and replaced it with an intentionally empty Rumble-phase mirror snapshot. The file is much shorter now because it no longer ships a demo `LIVE` creator.
+- Added focused regression coverage in `tests/live-status-authority.test.mjs` for Rumble-only gating, discovery-without-aggregate staying offline, embedded/sample `live_status` being ignored without aggregate truth, and FindMeHere still booting through the shared authoritative live adapter.
+
 ### FindMeHere Authoritative Live Status Downstream Pass - 2026-04-13
 
 ### Technical Notes
