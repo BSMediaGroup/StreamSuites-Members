@@ -1380,6 +1380,37 @@ body.public-shell-page.modal-open {
   outline: none;
 }
 
+.social-overflow-toggle,
+.social-overflow-indicator {
+  min-width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(179, 196, 221, 0.22);
+  background: rgba(17, 24, 37, 0.62);
+  color: rgba(194, 210, 233, 0.84);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  font-size: 0.64rem;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  flex: 0 0 auto;
+}
+
+.social-overflow-toggle {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.social-overflow-toggle:hover,
+.social-overflow-toggle:focus-visible {
+  border-color: rgba(154, 209, 255, 0.5);
+  color: #eef7ff;
+  background: rgba(31, 43, 64, 0.8);
+  outline: none;
+}
+
 .profile-bio-text {
   margin: 0;
   color: rgba(201, 214, 235, 0.92);

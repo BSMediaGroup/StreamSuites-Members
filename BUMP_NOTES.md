@@ -143,6 +143,32 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 Open bucket for future work only. Do not add new `0.4.8-alpha` prep notes into the released `0.4.2-alpha` section above.
 
+## Members Social Platform Registry + Overflow Pass - 2026-04-19
+
+### Technical Notes
+
+- Replaced the scattered partial social mappings in `js/members-data.js`, `js/members-ui.js`, `js/findmehere-app.js`, and `assets/js/ss-profile-hovercard.js` with one canonical registry in `js/members-data.js`, including alias normalization for existing payload keys such as `twitter`, `site`/`web`, `apple_podcasts`, `whatsapp_channels`, and `ko-fi`.
+- Expanded both Members and FindMeHere consumers to the full first-class plus extended platform list, switched website rendering to the canonical full-color `assets/icons/website.svg`, and kept WhatsApp Channels on the existing `assets/icons/whatsapp.svg` asset instead of adding a separate channel-specific icon file.
+- Replaced the old full-profile icon-strip logic in `js/members-ui.js` so narrower layouts collapse only overflow links behind a slim inline toggle while preserving the canonical order.
+- Replaced the old hovercard-specific social mapping in `assets/js/ss-profile-hovercard.js` so compact member-card and hover surfaces now cap at eight icons and append a restrained `+N` indicator.
+- Replaced the plain-text FindMeHere social-link normalization path in `js/findmehere-app.js` with canonical sorting plus per-platform icon rendering, while preserving the existing share-page list layout instead of redesigning the page.
+
+### Human-Readable Notes
+
+- Members profile surfaces and FindMeHere pages now understand the expanded social-platform list in the same priority order, so the most important links consistently appear first.
+- Hovercards and other compact previews stay concise with an at-a-glance `+N` overflow hint, while full profile strips can still expose more links on demand without taking over the layout.
+
+### Files / Areas Touched
+
+- `js/members-data.js`
+- `js/members-ui.js`
+- `js/findmehere-app.js`
+- `assets/js/ss-profile-hovercard.js`
+- `css/public-shell.css`
+- `assets/css/ss-profile-hovercard.css`
+- `README.md`
+- `BUMP_NOTES.md`
+
 ## Members Rumble-Only Live Truth Cleanup - 2026-04-14
 
 - Replaced the remaining fake/sample live authority in `js/members-data.js` by removing embedded-profile live-state participation from `resolveLiveStatus(...)` and fetched-profile normalization, restricting renderable live providers to authoritative Rumble entries only, and keeping `rumble_live_discovery.json` strictly additive so it cannot create a `LIVE` state on its own.

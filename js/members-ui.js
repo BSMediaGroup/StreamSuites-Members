@@ -9,19 +9,6 @@
     developer: "/assets/icons/dev-green.svg"
   });
 
-  const SOCIAL_ICON_MAP = Object.freeze({
-    youtube: "/assets/icons/youtube.svg",
-    rumble: "/assets/icons/rumble.svg",
-    discord: "/assets/icons/discord.svg",
-    x: "/assets/icons/x.svg",
-    twitter: "/assets/icons/twitter.svg",
-    twitch: "/assets/icons/twitch.svg",
-    kick: "/assets/icons/kick.svg",
-    github: "/assets/icons/github.svg",
-    website: "/assets/icons/ui/globe.svg",
-    tiktok: "/assets/icons/ui/widget.svg"
-  });
-
   const UI_ICON_MAP = Object.freeze({
     copy: "/assets/icons/ui/portal.svg",
     check: "/assets/icons/ui/tickyes.svg"
@@ -370,27 +357,65 @@
     return box;
   }
 
+  function collectOrderedSocialEntries(socialLinks) {
+    const api = window.StreamSuitesMembersData;
+    if (typeof api?.collectOrderedSocialEntries === "function") {
+      return api.collectOrderedSocialEntries(socialLinks);
+    }
+    return [];
+  }
+
+  function getProfileSocialVisibleLimit() {
+    if (window.matchMedia("(max-width: 640px)").matches) return 8;
+    if (window.matchMedia("(max-width: 900px)").matches) return 10;
+    return 14;
+  }
+
+  function buildSocialIconLink(entry, className = "social-icon-btn") {
+    const anchor = create("a", className);
+    anchor.href = entry.url;
+    anchor.target = "_blank";
+    anchor.rel = "noopener noreferrer";
+    anchor.setAttribute("aria-label", entry.label || entry.network);
+    const icon = create("img");
+    icon.src = entry.iconPath || "/assets/icons/link.svg";
+    icon.alt = "";
+    anchor.appendChild(icon);
+    return anchor;
+  }
+
   function buildSocialLinksRow(socialLinks) {
     const row = create("div", "profile-social-row");
-    const entries = Object.entries(window.StreamSuitesMembersData.normalizeSocialLinks(socialLinks));
+    const entries = collectOrderedSocialEntries(socialLinks);
     if (!entries.length) {
       row.appendChild(create("span", "muted", "No social links set."));
       return row;
     }
-    entries.forEach(([network, url]) => {
-      const href = String(url || "").trim();
-      if (!href) return;
-      const anchor = create("a", "social-icon-btn");
-      anchor.href = /^https?:\/\//i.test(href) ? href : `https://${href.replace(/^\/+/, "")}`;
-      anchor.target = "_blank";
-      anchor.rel = "noopener noreferrer";
-      anchor.setAttribute("aria-label", network);
-      const icon = create("img");
-      icon.src = SOCIAL_ICON_MAP[String(network || "").toLowerCase()] || SOCIAL_ICON_MAP.website;
-      icon.alt = "";
-      anchor.appendChild(icon);
-      row.appendChild(anchor);
-    });
+    const collapsedLimit = getProfileSocialVisibleLimit();
+    const hiddenEntries = entries.slice(collapsedLimit);
+    let expanded = false;
+    const render = () => {
+      row.innerHTML = "";
+      const visibleEntries = expanded ? entries : entries.slice(0, collapsedLimit);
+      visibleEntries.forEach((entry) => {
+        row.appendChild(buildSocialIconLink(entry));
+      });
+      if (hiddenEntries.length) {
+        const toggle = create("button", "social-overflow-toggle", expanded ? "Less" : `+${hiddenEntries.length}`);
+        toggle.type = "button";
+        toggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+        toggle.setAttribute(
+          "aria-label",
+          expanded ? "Collapse extra social links" : `Show ${hiddenEntries.length} more social links`
+        );
+        toggle.addEventListener("click", () => {
+          expanded = !expanded;
+          render();
+        });
+        row.appendChild(toggle);
+      }
+    };
+    render();
     return row;
   }
 

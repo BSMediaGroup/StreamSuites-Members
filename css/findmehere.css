@@ -1158,14 +1158,14 @@ body.findmehere-page input {
 
 .fmh-social-item {
   display: grid;
-  gap: 6px;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
   padding: 14px 16px;
 }
 
 .fmh-social-item-custom {
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 12px;
-  align-items: center;
 }
 
 .fmh-social-item-icon {

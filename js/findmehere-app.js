@@ -365,11 +365,17 @@
   }
 
   function normalizeSocialLinks(value) {
+    const api = window.StreamSuitesMembersData;
+    if (typeof api?.collectOrderedSocialEntries === "function") {
+      return api.collectOrderedSocialEntries(value);
+    }
     if (!value || typeof value !== "object" || Array.isArray(value)) return [];
     return Object.entries(value)
       .map(([network, url]) => ({
         network: String(network || "").trim().toLowerCase(),
-        url: String(url || "").trim()
+        url: String(url || "").trim(),
+        label: toTitle(network),
+        iconPath: "/assets/icons/link.svg"
       }))
       .filter((item) => item.network && item.url);
   }
@@ -519,7 +525,7 @@
   }
 
   function getPrimaryPlatforms(profile) {
-    return profile.social_links.slice(0, 3).map((item) => toTitle(item.network));
+    return profile.social_links.slice(0, 3).map((item) => item.label || toTitle(item.network));
   }
 
   function buildLivePlatformSummary(profile) {
@@ -1634,7 +1640,17 @@
     link.href = href;
     link.target = "_blank";
     link.rel = "noopener noreferrer";
-    link.append(create("strong", "", toTitle(item.network)), create("p", "", href));
+    const iconWrap = create("span", "fmh-social-item-icon");
+    const icon = create("img");
+    icon.src = item.iconPath || "/assets/icons/link.svg";
+    icon.alt = "";
+    icon.decoding = "async";
+    icon.loading = "lazy";
+    iconWrap.appendChild(icon);
+
+    const copy = create("span", "fmh-social-item-copy");
+    copy.append(create("strong", "", item.label || toTitle(item.network)), create("p", "", href));
+    link.append(iconWrap, copy);
     return link;
   }
 
