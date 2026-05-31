@@ -4,7 +4,7 @@ Standalone FindMeHere surface deployed to Cloudflare Pages at `https://findmeher
 
 ## Release State
 
-- README state prepared for `v0.4.2-alpha`.
+- README state prepared for `v0.5.0-alpha`.
 - This repo is the active FindMeHere web surface, not a members shim.
 - Historical members-era files remain only where they still support compatibility redirects or shared styling.
 
@@ -72,7 +72,7 @@ StreamSuites-Members/
 ├── favicon.ico
 ├── index.html
 ├── changelog/
-│   └── v0.4.2-alpha.md
+│   └── v0.5.0-CHANGELOG.md
 ├── auth-complete/
 │   └── index.html
 ├── functions/
