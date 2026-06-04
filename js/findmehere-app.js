@@ -181,6 +181,55 @@
     return parts.map((part) => part.charAt(0).toUpperCase()).join("");
   }
 
+  function stableImageUrl(url, cacheKey) {
+    const source = String(url || "").trim();
+    const key = String(cacheKey || "").trim();
+    if (!source || !key || source.startsWith("data:") || source.startsWith("blob:")) return source;
+    try {
+      const parsed = new URL(source, window.location.origin);
+      if (!parsed.searchParams.has("v")) parsed.searchParams.set("v", key);
+      return parsed.origin === window.location.origin && source.startsWith("/")
+        ? `${parsed.pathname}${parsed.search}${parsed.hash}`
+        : parsed.toString();
+    } catch (_) {
+      return source;
+    }
+  }
+
+  function normalizedImageContract(source = {}, fallback = {}) {
+    const profileMedia = source?.profile_media || source?.profileMedia || {};
+    const image = source?.image || profileMedia.avatar || {};
+    const avatarUrl = String(
+      image.avatar_url ||
+        image.profile_image_url ||
+        image.url ||
+        profileMedia.avatar_url ||
+        profileMedia.profile_image_url ||
+        source?.profile_image_url ||
+        source?.profileImageUrl ||
+        source?.avatar_url ||
+        source?.avatarUrl ||
+        source?.avatar ||
+        fallback?.avatar_url ||
+        fallback?.avatar ||
+        ""
+    ).trim();
+    const imageVersion = String(
+      image.image_version ||
+        image.cache_key ||
+        profileMedia.image_version ||
+        profileMedia.cache_key ||
+        source?.image_version ||
+        source?.imageVersion ||
+        fallback?.imageVersion ||
+        ""
+    ).trim();
+    return {
+      avatarUrl: stableImageUrl(avatarUrl, imageVersion),
+      fallbackInitial: String(image.fallback_display_initial || profileMedia.fallback_display_initial || source?.fallback_display_initial || source?.fallbackDisplayInitial || "").trim()
+    };
+  }
+
   function getDefaultAuthState() {
     const normalizeAuthState = window.StreamSuitesMembersSession?.normalizeAuthState;
     if (typeof normalizeAuthState === "function") {
@@ -357,10 +406,14 @@
       const image = create("img");
       image.src = url;
       image.alt = `${profile.display_name || profile.slug || "Profile"} avatar`;
+      image.addEventListener("error", () => {
+        image.remove();
+        wrap.textContent = profile?.fallback_display_initial || getInitials(profile?.display_name || profile?.slug);
+      }, { once: true });
       wrap.appendChild(image);
       return wrap;
     }
-    wrap.textContent = getInitials(profile?.display_name || profile?.slug);
+    wrap.textContent = profile?.fallback_display_initial || getInitials(profile?.display_name || profile?.slug);
     return wrap;
   }
 
@@ -776,13 +829,15 @@
     const hasCanonicalSlug = Boolean(slug);
     const accountType = String(profile?.account_type || fallback?.account_type || "").trim() || (String(profile?.role || fallback?.role || "").toLowerCase().includes("admin") ? "ADMIN" : String(profile?.role || fallback?.role || "").toLowerCase().includes("creator") ? "CREATOR" : "PUBLIC");
     const tier = String(profile?.tier || fallback?.tier || "").trim();
+    const imageContract = normalizedImageContract(profile, fallback);
     return {
       slug,
       public_slug: slug,
       slug_aliases: Array.isArray(profile?.slug_aliases) ? profile.slug_aliases.map((item) => normalizeSlug(item)).filter(Boolean) : [],
       user_code: String(profile?.user_code || fallback?.user_code || "").trim(),
       display_name: String(profile?.display_name || fallback?.display_name || slug).trim() || slug,
-      avatar_url: String(profile?.avatar_url || profile?.avatar || fallback?.avatar_url || fallback?.avatar || "").trim(),
+      avatar_url: imageContract.avatarUrl || String(profile?.avatar_url || profile?.avatar || fallback?.avatar_url || fallback?.avatar || "").trim(),
+      fallback_display_initial: imageContract.fallbackInitial,
       tier,
       role: String(profile?.role || fallback?.role || "").trim(),
       account_type: accountType,

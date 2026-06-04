@@ -376,6 +376,13 @@
         accountAvatar.style.backgroundImage = `url(${avatarUrl})`;
         accountAvatar.style.backgroundSize = "cover";
         accountAvatar.style.backgroundPosition = "center";
+        const probe = new Image();
+        probe.addEventListener("error", () => {
+          accountAvatar.classList.remove("has-image");
+          accountAvatar.style.backgroundImage = "";
+          accountAvatar.textContent = nextLabel.charAt(0).toUpperCase() || "L";
+        }, { once: true });
+        probe.src = avatarUrl;
         return;
       }
 

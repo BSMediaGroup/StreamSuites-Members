@@ -7,6 +7,10 @@ import vm from "node:vm";
 const repoRoot = process.cwd();
 const membersDataSource = fs.readFileSync(path.join(repoRoot, "js/members-data.js"), "utf8");
 
+function read(relativePath) {
+  return fs.readFileSync(path.join(repoRoot, relativePath), "utf8");
+}
+
 function instantiateMembersData(fetchImpl) {
   const context = {
     window: {},
@@ -83,6 +87,26 @@ test("members authoritative live adapter enriches rumble entries from discovery 
   assert.equal(resolved?.title, "Discovery Title");
   assert.equal(resolved?.url, "https://rumble.com/v123-discovery");
   assert.equal(resolved?.viewerCount, 44);
+});
+
+test("members profile and shell avatars consume normalized runtime image metadata", () => {
+  const dataJs = read("js/members-data.js");
+  const sessionJs = read("js/members-session.js");
+  const uiJs = read("js/members-ui.js");
+  const shellJs = read("js/members-shell.js");
+  const findmehereJs = read("js/findmehere-app.js");
+
+  for (const js of [dataJs, sessionJs, findmehereJs]) {
+    assert.match(js, /function normalizedImageContract\(source = \{\}, fallback = \{\}\)/);
+    assert.match(js, /function stableImageUrl\(url, cacheKey\)/);
+    const stableImageHelper = js.match(/function stableImageUrl\(url, cacheKey\)[\s\S]*?\n  }\n\n  function normalizedImageContract/)?.[0] || "";
+    assert.doesNotMatch(stableImageHelper, /Date\.now\(\)/);
+  }
+  assert.match(dataJs, /const imageContract = normalizedImageContract\(raw, \{ avatar: FALLBACK_AVATAR \}\)/);
+  assert.match(sessionJs, /avatarUrl: normalizedImageContract\(payload, payload\?\.data \|\| payload\?\.user \|\| payload\?\.creator \|\| \{\}\)/);
+  assert.match(uiJs, /probe\.addEventListener\("error"/);
+  assert.match(shellJs, /probe\.addEventListener\("error"/);
+  assert.match(findmehereJs, /image\.addEventListener\("error"/);
 });
 
 test("members authoritative live adapter does not create live state from discovery alone", () => {

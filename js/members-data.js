@@ -185,6 +185,56 @@
     return normalized;
   }
 
+  function stableImageUrl(url, cacheKey) {
+    const source = String(url || "").trim();
+    const key = String(cacheKey || "").trim();
+    if (!source || !key || source.startsWith("data:") || source.startsWith("blob:")) return source;
+    try {
+      const parsed = new URL(source, window.location.origin);
+      if (!parsed.searchParams.has("v")) parsed.searchParams.set("v", key);
+      return parsed.origin === window.location.origin && source.startsWith("/")
+        ? `${parsed.pathname}${parsed.search}${parsed.hash}`
+        : parsed.toString();
+    } catch (_) {
+      return source;
+    }
+  }
+
+  function normalizedImageContract(source = {}, fallback = {}) {
+    const profileMedia = source?.profile_media || source?.profileMedia || {};
+    const image = source?.image || profileMedia.avatar || {};
+    const avatarUrl = String(
+      image.avatar_url ||
+        image.profile_image_url ||
+        image.url ||
+        profileMedia.avatar_url ||
+        profileMedia.profile_image_url ||
+        source?.profile_image_url ||
+        source?.profileImageUrl ||
+        source?.avatar_url ||
+        source?.avatarUrl ||
+        source?.avatar ||
+        fallback?.avatar ||
+        ""
+    ).trim();
+    const imageVersion = String(
+      image.image_version ||
+        image.cache_key ||
+        profileMedia.image_version ||
+        profileMedia.cache_key ||
+        source?.image_version ||
+        source?.imageVersion ||
+        fallback?.imageVersion ||
+        ""
+    ).trim();
+    return {
+      avatarUrl: stableImageUrl(avatarUrl, imageVersion),
+      rawAvatarUrl: avatarUrl,
+      imageVersion,
+      fallbackInitial: String(image.fallback_display_initial || profileMedia.fallback_display_initial || source?.fallback_display_initial || source?.fallbackDisplayInitial || "").trim()
+    };
+  }
+
   function isValidUserCode(value) {
     return /^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$/i.test(String(value || "").trim());
   }
@@ -531,12 +581,16 @@
     const role = normalizeRole(raw?.role || raw?.account_type || raw?.accountType);
     const tier = normalizeTier(raw?.tier || raw?.plan_tier || raw?.membership_tier);
     const platform = String(raw?.platform || "StreamSuites").trim() || "StreamSuites";
+    const imageContract = normalizedImageContract(raw, { avatar: FALLBACK_AVATAR });
     return {
       id: String(raw?.id || userCode).trim() || userCode,
       userCode,
       username: String(raw?.username || userCode).trim() || userCode,
       displayName: String(raw?.display_name || raw?.displayName || raw?.name || userCode).trim() || userCode,
-      avatar: String(raw?.avatar || raw?.avatar_url || raw?.avatarUrl || FALLBACK_AVATAR).trim() || FALLBACK_AVATAR,
+      avatar: imageContract.avatarUrl || FALLBACK_AVATAR,
+      rawAvatarUrl: imageContract.rawAvatarUrl,
+      imageVersion: imageContract.imageVersion,
+      fallbackDisplayInitial: imageContract.fallbackInitial,
       platform,
       platformKey: normalizePlatformKey(platform),
       platformIcon: platformIconFor(platform),
@@ -632,6 +686,7 @@
     const userCode = normalizeUserCode(
       payload?.user_code || payload?.userCode || fallbackProfile?.userCode || fallbackCode || "public-user"
     );
+    const imageContract = normalizedImageContract(payload, fallbackProfile || { avatar: FALLBACK_AVATAR });
     return {
       id: fallbackProfile?.id || userCode,
       userCode,
@@ -639,9 +694,10 @@
       displayName:
         String(payload?.display_name || payload?.displayName || fallbackProfile?.displayName || "Public User").trim() ||
         "Public User",
-      avatar:
-        String(payload?.avatar_url || payload?.avatarUrl || fallbackProfile?.avatar || FALLBACK_AVATAR).trim() ||
-        FALLBACK_AVATAR,
+      avatar: imageContract.avatarUrl || FALLBACK_AVATAR,
+      rawAvatarUrl: imageContract.rawAvatarUrl,
+      imageVersion: imageContract.imageVersion,
+      fallbackDisplayInitial: imageContract.fallbackInitial,
       platform: fallbackProfile?.platform || "StreamSuites",
       platformKey: fallbackProfile?.platformKey || "streamsuites",
       platformIcon: fallbackProfile?.platformIcon || PLATFORM_ICON_MAP.streamsuites,

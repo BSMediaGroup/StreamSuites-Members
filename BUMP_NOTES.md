@@ -4,6 +4,12 @@
 
 Packaged / released and no longer the active pending bucket. Preserve new notes for the open `0.4.8-alpha` section below.
 
+## CURRENT VER= 0.4.8-alpha / PENDING VER= 0.4.9-alpha
+
+- Members and FindMeHere profile/session/header avatar hydration now consumes Runtime/Auth normalized image/profile media fields before legacy avatar aliases.
+- Added stable image cache-key handling and broken-image fallback behavior for member cards, shell avatars, and FindMeHere profile images without making Members an image authority layer.
+- Human note: FindMeHere/member avatars should stay consistent after refresh/cache clears and fall back cleanly when a remote image cannot load.
+
 ## FindMeHere Admin Badge Priority Alignment - 2026-03-27
 
 - Members and FindMeHere fallback badge builders now stop emitting creator-tier icons for admin accounts, and the shared badge normalizers also strip stale admin-plus-tier combinations when older payloads still carry them.

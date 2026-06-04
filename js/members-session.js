@@ -153,6 +153,51 @@
     return badges;
   }
 
+  function stableImageUrl(url, cacheKey) {
+    const source = String(url || "").trim();
+    const key = String(cacheKey || "").trim();
+    if (!source || !key || source.startsWith("data:") || source.startsWith("blob:")) return source;
+    try {
+      const parsed = new URL(source, window.location.origin);
+      if (!parsed.searchParams.has("v")) parsed.searchParams.set("v", key);
+      return parsed.origin === window.location.origin && source.startsWith("/")
+        ? `${parsed.pathname}${parsed.search}${parsed.hash}`
+        : parsed.toString();
+    } catch (_) {
+      return source;
+    }
+  }
+
+  function normalizedImageContract(source = {}, fallback = {}) {
+    const profileMedia = source?.profile_media || source?.profileMedia || {};
+    const image = source?.image || profileMedia.avatar || {};
+    const avatarUrl = String(
+      image.avatar_url ||
+        image.profile_image_url ||
+        image.url ||
+        profileMedia.avatar_url ||
+        profileMedia.profile_image_url ||
+        source?.profile_image_url ||
+        source?.profileImageUrl ||
+        source?.avatar_url ||
+        source?.avatarUrl ||
+        fallback?.avatar_url ||
+        fallback?.avatarUrl ||
+        ""
+    ).trim();
+    const imageVersion = String(
+      image.image_version ||
+        image.cache_key ||
+        profileMedia.image_version ||
+        profileMedia.cache_key ||
+        source?.image_version ||
+        source?.imageVersion ||
+        fallback?.imageVersion ||
+        ""
+    ).trim();
+    return stableImageUrl(avatarUrl, imageVersion);
+  }
+
   function normalizeAuthState(payload) {
     const authenticated = readAuthenticated(payload);
     if (!authenticated) {
@@ -208,13 +253,7 @@
         payload?.name ||
         "User"
       ).trim() || "User",
-      avatarUrl: String(
-        payload?.avatar_url ||
-        payload?.data?.avatar_url ||
-        payload?.user?.avatar_url ||
-        payload?.creator?.avatar_url ||
-        ""
-      ).trim(),
+      avatarUrl: normalizedImageContract(payload, payload?.data || payload?.user || payload?.creator || {}),
       accountType,
       tier,
       badges:

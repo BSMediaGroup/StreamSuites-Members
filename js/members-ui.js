@@ -147,9 +147,17 @@
     if (image) {
       avatar.style.backgroundImage = `url(${image})`;
       avatar.classList.add("has-image");
+      const probe = new Image();
+      probe.addEventListener("error", () => {
+        avatar.style.backgroundImage = "";
+        avatar.classList.remove("has-image");
+        avatar.classList.add("is-fallback");
+        avatar.textContent = String(profile?.fallbackDisplayInitial || profile?.displayName || "P").trim().charAt(0).toUpperCase() || "P";
+      }, { once: true });
+      probe.src = image;
       return avatar;
     }
-    avatar.textContent = String(profile?.displayName || "P").trim().charAt(0).toUpperCase() || "P";
+    avatar.textContent = String(profile?.fallbackDisplayInitial || profile?.displayName || "P").trim().charAt(0).toUpperCase() || "P";
     avatar.classList.add("is-fallback");
     return avatar;
   }
